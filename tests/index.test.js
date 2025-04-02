@@ -12,7 +12,7 @@ describe('API Routes', () => {
         const req = new Request('http://localhost/');
         const response = await controller.getHome(req);
         const text = await response.text();
-        expect(text).toBe('Welcome to the Home Page');
+        expect(text).toBe('This is a freshly steamed bun');
     });
 
     test('GET /data should return data', async () => {
