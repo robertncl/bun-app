@@ -1,6 +1,6 @@
 # README.md
 
-vibe coding experiment
+vibe coding experiment for bun
 
 # Bun App
 
