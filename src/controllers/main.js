@@ -1,6 +1,6 @@
 class MainController {
     getHome(req) {
-        return new Response('Welcome to the Home Page');
+        return new Response('This is a freshly steamed bun');
     }
 
     getData(req) {
