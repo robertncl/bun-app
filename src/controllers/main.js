@@ -8,6 +8,10 @@ class MainController {
         const data = { message: "Here is your data!" };
         res.json(data);
     }
+
+    static hello() {
+        return "Hello, world!";
+    }
 }
 
-export default MainController;
+export { MainController };
