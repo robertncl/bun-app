@@ -27,4 +27,4 @@ jobs:
       run: bun test
 
     - name: Build application
-      run: bun build ./src/index.js --outdir ./dist
+      run: bun build ./src/index.js --outdir ./dist --target bun
