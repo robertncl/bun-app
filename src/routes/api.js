@@ -2,7 +2,15 @@ import { MainController } from '../controllers/main.js';
 
 const mainController = new MainController();
 
-export function setupRoutes(app) {
-    app.get('/', mainController.getHome.bind(mainController));
-    app.get('/data', mainController.getData.bind(mainController));
+export async function handleRequest(req) {
+  const url = new URL(req.url);
+  
+  switch (url.pathname) {
+    case '/':
+      return mainController.getHome(req);
+    case '/data':
+      return mainController.getData(req);
+    default:
+      return new Response('Not Found', { status: 404 });
+  }
 }
