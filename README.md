@@ -1,5 +1,7 @@
 # README.md
 
+vibe coding experiment
+
 # Bun App
 
 This is a sample project built using the Bun framework. It serves as a demonstration of how to set up a basic application structure with routes, controllers, and services.
