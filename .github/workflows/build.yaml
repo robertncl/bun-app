@@ -65,8 +65,11 @@ jobs:
     - name: Setup Pages
       uses: actions/configure-pages@v4
 
-    - name: Debug Artifact List
-      run: ls -R ./_site
+    - name: Create site directory
+      run: |
+        mkdir -p ./_site
+        pwd
+        ls -la
 
     - name: Download artifact
       uses: actions/download-artifact@v4
@@ -75,7 +78,10 @@ jobs:
         path: ./_site
 
     - name: Debug Downloaded Files
-      run: ls -R ./_site
+      run: |
+        echo "Current directory structure:"
+        pwd
+        ls -R ./_site
 
     - name: Deploy to GitHub Pages
       id: deployment
