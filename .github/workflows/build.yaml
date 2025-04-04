@@ -58,11 +58,17 @@ jobs:
     - name: Setup Pages
       uses: actions/configure-pages@v4
 
+    - name: Debug Artifact List
+      run: ls -R ./_site
+
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         name: github-pages
         path: ./_site
+
+    - name: Debug Downloaded Files
+      run: ls -R ./_site
 
     - name: Deploy to GitHub Pages
       id: deployment
