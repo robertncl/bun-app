@@ -37,9 +37,16 @@ jobs:
     - name: Prepare static files
       run: |
         mkdir -p ./_site
-        cp -r ./public/* ./_site/ || true
-        cp ./dist/index.html ./_site/ || true
-        cp ./dist/index.js ./_site/ || true
+        if [ -d "./public" ]; then
+          cp -r ./public/* ./_site/
+        fi
+        if [ -f "./dist/index.html" ]; then
+          cp ./dist/index.html ./_site/
+        fi
+        if [ -f "./dist/index.js" ]; then
+          cp ./dist/index.js ./_site/
+        fi
+        ls -R ./_site # Debug to confirm files are copied
 
     - name: Upload artifact for GitHub Pages
       uses: actions/upload-artifact@v4
