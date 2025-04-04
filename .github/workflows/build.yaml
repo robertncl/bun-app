@@ -30,8 +30,9 @@ jobs:
       run: bun build ./src/index.js --outdir ./dist --target bun
 
     - name: Upload artifact for GitHub Pages
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
+        name: dist-artifact
         path: ./dist
 
   deploy:
