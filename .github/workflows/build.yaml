@@ -30,7 +30,7 @@ jobs:
       run: bun build ./src/index.js --outdir ./dist --target bun
 
     - name: Upload artifact for GitHub Pages
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4
       with:
         name: dist-artifact
         path: ./dist
