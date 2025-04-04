@@ -16,7 +16,7 @@ export async function handleRequest(req) {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background-color: red; /* Changed from #f9f9f9 to red */
         }
         .title {
             color: #333;
