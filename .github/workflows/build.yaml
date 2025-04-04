@@ -29,11 +29,18 @@ jobs:
     - name: Build application
       run: bun build ./src/index.js --outdir ./dist --target bun
 
+    - name: Prepare static files
+      run: |
+        mkdir -p ./_site
+        cp -r ./public/* ./_site/ || true
+        cp ./dist/index.html ./_site/ || true
+        cp ./dist/index.js ./_site/ || true
+
     - name: Upload artifact for GitHub Pages
       uses: actions/upload-artifact@v4
       with:
         name: github-pages
-        path: ./dist
+        path: ./_site
 
   deploy:
     needs: build
