@@ -4,14 +4,15 @@
   "description": "A sample Bun framework application",
   "main": "src/index.js",
   "scripts": {
-    "start": "bun src/index.js",
-    "test": "bun test"
+    "start": "bun run src/index.js",
+    "test": "bun test",
+    "dev": "bun --hot src/index.js"
   },
   "dependencies": {
-    "bun": "^1.0.0"
+    "bun": "^1.0.21"
   },
   "devDependencies": {
-    "jest": "^27.0.0"
+    "typescript": "^5.3.3"
   },
   "author": "Your Name",
   "license": "MIT"
