@@ -4,7 +4,7 @@ FROM alpine:latest
 ENV RUNNER_VERSION=2.324.0
 ENV RUNNER_ARCH=arm64
 ENV RUNNER_CONTAINER_HOOKS_VERSION=0.7.0
-ENV DOTNET_VERSION=8.0
+ENV DOTNET_VERSION=9.0
 
 # Install .NET Core dependencies and basic requirements
 RUN apk add --no-cache \
