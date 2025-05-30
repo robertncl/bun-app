@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.19
 
 # Environment variables
 ENV RUNNER_VERSION=2.324.0
