@@ -4,9 +4,17 @@ FROM alpine:3.19
 ENV RUNNER_VERSION=2.314.1
 ENV RUNNER_ARCH=x64
 ENV RUNNER_CONTAINER_HOOKS_VERSION=0.5.1
+ENV DOTNET_VERSION=8.0
 
-# Install required packages
+# Install .NET Core dependencies and basic requirements
 RUN apk add --no-cache \
+    icu-libs \
+    krb5-libs \
+    libgcc \
+    libintl \
+    libssl3 \
+    libstdc++ \
+    zlib \
     curl \
     tar \
     jq \
@@ -17,8 +25,16 @@ RUN apk add --no-cache \
     docker-cli-compose \
     sudo \
     bash \
-    icu-libs \
+    unzip \
+    wget \
     && rm -rf /var/cache/apk/*
+
+# Install .NET Runtime using official script
+RUN wget https://dot.net/v1/dotnet-install.sh \
+    && chmod +x dotnet-install.sh \
+    && ./dotnet-install.sh --channel ${DOTNET_VERSION} --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm dotnet-install.sh
 
 # Create a runner user
 RUN adduser -D -h /home/runner runner \
