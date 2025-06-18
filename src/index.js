@@ -1,6 +1,7 @@
 // This file is the entry point of the application. It initializes the Bun server and sets up middleware and routes.
 
 import { serve } from "bun";
+<<<<<<< HEAD
 
 function parseQuery(url) {
   const params = {};
@@ -50,3 +51,13 @@ const server = serve({
 });
 
 console.log("Calculator server is running on http://localhost:3000");
+=======
+import { handleRequest } from "./routes/api";
+
+const server = serve({
+  port: 3000,
+  fetch: handleRequest
+});
+
+console.log("Server is running on http://localhost:3000");
+>>>>>>> 6f33076d598cda0312e4943a1ec1ea0b8cb0918d

@@ -1,0 +1,22 @@
+# Node modules (Bun uses its own cache, but include this for safety)
+node_modules/
+
+# Bun cache
+.bun/
+
+# Build output
+dist/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+bun.lockb
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,4 +1,4 @@
-import { setupRoutes } from '../src/routes/api';
+import { handleRequest } from '../src/routes/api';
 import { MainController } from '../src/controllers/main';
 
 describe('API Routes', () => {
@@ -9,22 +9,16 @@ describe('API Routes', () => {
     });
 
     test('GET / should return home page', async () => {
-        const req = {};
-        const res = {
-            send: jest.fn(),
-        };
-
-        await controller.getHome(req, res);
-        expect(res.send).toHaveBeenCalledWith('Welcome to the Home Page');
+        const req = new Request('http://localhost/');
+        const response = await controller.getHome(req);
+        const text = await response.text();
+        expect(text).toContain('<b>This is a freshly steamed bun</b>');
     });
 
     test('GET /data should return data', async () => {
-        const req = {};
-        const res = {
-            json: jest.fn(),
-        };
-
-        await controller.getData(req, res);
-        expect(res.json).toHaveBeenCalledWith({ data: 'Sample Data' });
+        const req = new Request('http://localhost/data');
+        const response = await controller.getData(req);
+        const data = await response.json();
+        expect(data).toEqual({ data: 'Sample Data' });
     });
 });
