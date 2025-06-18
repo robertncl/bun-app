@@ -1,7 +1,14 @@
+import { startServer } from '../src/index.js';
 import { calculator } from '../src/calculator.js';
-
-// Calculator API tests for Bun
 const { fetch } = require('bun');
+
+let server;
+beforeAll(() => {
+  server = startServer(3000);
+});
+afterAll(() => {
+  if (server && server.stop) server.stop();
+});
 
 describe('Calculator API', () => {
   async function callApi(path) {
