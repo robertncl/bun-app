@@ -1,10 +1,41 @@
 class MainController {
-    getHome(req, res) {
-        res.send('Welcome to the Home Page');
+    add(req, res) {
+        const a = parseFloat(req.query.a);
+        const b = parseFloat(req.query.b);
+        if (isNaN(a) || isNaN(b)) {
+            return res.json({ error: 'Invalid numbers' });
+        }
+        res.json({ result: a + b });
     }
 
-    getData(req, res) {
-        res.json({ data: 'Sample Data' });
+    subtract(req, res) {
+        const a = parseFloat(req.query.a);
+        const b = parseFloat(req.query.b);
+        if (isNaN(a) || isNaN(b)) {
+            return res.json({ error: 'Invalid numbers' });
+        }
+        res.json({ result: a - b });
+    }
+
+    multiply(req, res) {
+        const a = parseFloat(req.query.a);
+        const b = parseFloat(req.query.b);
+        if (isNaN(a) || isNaN(b)) {
+            return res.json({ error: 'Invalid numbers' });
+        }
+        res.json({ result: a * b });
+    }
+
+    divide(req, res) {
+        const a = parseFloat(req.query.a);
+        const b = parseFloat(req.query.b);
+        if (isNaN(a) || isNaN(b)) {
+            return res.json({ error: 'Invalid numbers' });
+        }
+        if (b === 0) {
+            return res.json({ error: 'Division by zero' });
+        }
+        res.json({ result: a / b });
     }
 }
 
