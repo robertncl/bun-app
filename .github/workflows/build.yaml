@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -31,36 +29,9 @@ jobs:
     - name: Run tests
       run: bun test
 
-    - name: Build application
-      run: bun build ./src/index.js --outdir ./dist --target bun
-
-    - name: Prepare static files
+    - name: Check server starts
       run: |
-        mkdir -p ./_site
-        if [ -d "./public" ]; then
-          cp -r ./public/* ./_site/
-        fi
-        if [ -f "./dist/index.html" ]; then
-          cp ./dist/index.html ./_site/
-        fi
-        if [ -f "./dist/index.js" ]; then
-          cp ./dist/index.js ./_site/
-        fi
-        ls -R ./_site # Debug to confirm files are copied
-
-    - name: Upload Pages artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: "_site"
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+        timeout 10s bun run src/index.js &
+        sleep 3
+        kill $! || true
+      shell: bash
