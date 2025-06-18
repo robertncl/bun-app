@@ -1,6 +1,7 @@
 // This file is the entry point of the application. It initializes the Bun server and sets up middleware and routes.
 
 import { serve } from "bun";
+import { calculator } from "./calculator.js";
 
 function parseQuery(url) {
   const params = {};
@@ -24,22 +25,9 @@ const server = serve({
       });
     }
 
-    if (url.pathname === "/add") {
-      if (isNaN(a) || isNaN(b)) return json({ error: "Invalid numbers" });
-      return json({ result: a + b });
-    }
-    if (url.pathname === "/subtract") {
-      if (isNaN(a) || isNaN(b)) return json({ error: "Invalid numbers" });
-      return json({ result: a - b });
-    }
-    if (url.pathname === "/multiply") {
-      if (isNaN(a) || isNaN(b)) return json({ error: "Invalid numbers" });
-      return json({ result: a * b });
-    }
-    if (url.pathname === "/divide") {
-      if (isNaN(a) || isNaN(b)) return json({ error: "Invalid numbers" });
-      if (b === 0) return json({ error: "Division by zero" });
-      return json({ result: a / b });
+    if (["/add", "/subtract", "/multiply", "/divide"].includes(url.pathname)) {
+      const op = url.pathname.slice(1); // remove leading /
+      return json(calculator(op, a, b));
     }
 
     return new Response(

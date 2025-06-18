@@ -1,5 +1,6 @@
 import { handleRequest } from '../src/routes/api';
 import { MainController } from '../src/controllers/main';
+import { calculator } from '../src/calculator.js';
 
 describe('API Routes', () => {
     let controller;
@@ -68,5 +69,29 @@ describe('Calculator API', () => {
     const res = await callApi('/add?a=foo&b=bar');
     const data = await res.json();
     expect(data).toEqual({ error: 'Invalid numbers' });
+  });
+});
+
+describe('calculator function', () => {
+  test('add', () => {
+    expect(calculator('add', 2, 3)).toEqual({ result: 5 });
+  });
+  test('subtract', () => {
+    expect(calculator('subtract', 5, 2)).toEqual({ result: 3 });
+  });
+  test('multiply', () => {
+    expect(calculator('multiply', 4, 6)).toEqual({ result: 24 });
+  });
+  test('divide', () => {
+    expect(calculator('divide', 8, 2)).toEqual({ result: 4 });
+  });
+  test('divide by zero', () => {
+    expect(calculator('divide', 8, 0)).toEqual({ error: 'Division by zero' });
+  });
+  test('invalid numbers', () => {
+    expect(calculator('add', 'foo', 'bar')).toEqual({ error: 'Invalid numbers' });
+  });
+  test('unknown operation', () => {
+    expect(calculator('mod', 5, 2)).toEqual({ error: 'Unknown operation' });
   });
 });
