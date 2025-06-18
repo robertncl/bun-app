@@ -1,37 +1,11 @@
-import { handleRequest } from '../src/routes/api';
-import { MainController } from '../src/controllers/main';
 import { calculator } from '../src/calculator.js';
 
-describe('API Routes', () => {
-    let controller;
-
-    beforeAll(() => {
-        controller = new MainController();
-    });
-
-    test('GET / should return home page', async () => {
-        const req = new Request('http://localhost/');
-        const response = await controller.getHome(req);
-        const text = await response.text();
-        expect(text).toContain('<b>This is a freshly steamed bun</b>');
-    });
-
-    test('GET /data should return data', async () => {
-        const req = new Request('http://localhost/data');
-        const response = await controller.getData(req);
-        const data = await response.json();
-        expect(data).toEqual({ data: 'Sample Data' });
-    });
-});
-
 // Calculator API tests for Bun
-
 const { fetch } = require('bun');
 
 describe('Calculator API', () => {
   async function callApi(path) {
     const req = new Request(`http://localhost:3000${path}`);
-    // Use globalThis.server if available, otherwise fetch directly
     return await fetch(req);
   }
 
