@@ -15,13 +15,27 @@ export function startServer(port = 3000) {
   return serve({
     port,
     fetch(req) {
-      // Only allow GET requests
+      // Handle CORS preflight and restrict methods
+      if (req.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "600"
+          }
+        });
+      }
       if (req.method !== 'GET') {
         return new Response(
           JSON.stringify({ error: 'Method not allowed' }),
           { 
             status: 405,
-            headers: { "Content-Type": "application/json" }
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+            }
           }
         );
       }
@@ -34,7 +48,14 @@ export function startServer(port = 3000) {
       function json(data, status = 200) {
         return new Response(JSON.stringify(data), {
           status,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "no-referrer",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+            "Access-Control-Allow-Origin": "*"
+          },
         });
       }
 
@@ -54,7 +75,7 @@ export function startServer(port = 3000) {
           error: 'Not found',
           message: 'Calculator API. Use /add, /subtract, /multiply, or /divide with query params a and b.'
         }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
+        { status: 404, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     },
   });

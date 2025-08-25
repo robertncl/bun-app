@@ -1,7 +1,14 @@
 // Calculator logic for Bun app
 
 export function calculator(operation, a, b) {
-  if (typeof a !== 'number' || typeof b !== 'number' || isNaN(a) || isNaN(b)) {
+  if (
+    typeof a !== 'number' ||
+    typeof b !== 'number' ||
+    isNaN(a) ||
+    isNaN(b) ||
+    !Number.isFinite(a) ||
+    !Number.isFinite(b)
+  ) {
     return { error: 'Invalid numbers' };
   }
   switch (operation) {

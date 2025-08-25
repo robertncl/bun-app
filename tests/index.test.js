@@ -84,6 +84,12 @@ describe('Calculator API', () => {
     expect(data).toHaveProperty('message');
   });
 
+  test('OPTIONS preflight returns 204 with CORS headers', async () => {
+    const res = await callApi('/add', 'OPTIONS');
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('GET');
+  });
+
   test('missing parameters return error', async () => {
     const res = await callApi('/add');
     expect(res.status).toBe(400);
