@@ -1,63 +1,34 @@
-FROM alpine:3.19
+FROM oven/bun:1.2.20-alpine AS deps
 
-# Environment variables
-ENV RUNNER_VERSION=2.324.0
-ENV RUNNER_ARCH=arm64
-ENV RUNNER_CONTAINER_HOOKS_VERSION=0.7.0
-ENV DOTNET_VERSION=9.0
+WORKDIR /app
 
-# Install .NET Core dependencies and basic requirements
-RUN apk add --no-cache \
-    icu-libs \
-    krb5-libs \
-    libgcc \
-    libintl \
-    libssl3 \
-    libstdc++ \
-    zlib \
-    curl \
-    tar \
-    jq \
-    git \
-    nodejs \
-    npm \
-    docker \
-    docker-cli-compose \
-    sudo \
-    bash \
-    unzip \
-    wget \
-    && rm -rf /var/cache/apk/*
+# Copy only dependency manifests first for better caching
+COPY package.json bun.lockb ./
 
-# Install .NET Runtime using official script
-RUN wget https://dot.net/v1/dotnet-install.sh \
-    && chmod +x dotnet-install.sh \
-    && ./dotnet-install.sh --channel ${DOTNET_VERSION} --install-dir /usr/share/dotnet \
-    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
-    && rm dotnet-install.sh
+# Install production and dev dependencies
+RUN bun install --frozen-lockfile
 
-# Create a runner user
-RUN adduser -D -h /home/runner runner \
-    && addgroup runner docker
+FROM oven/bun:1.2.20-alpine AS runner
 
-# Install GitHub Runner
-WORKDIR /home/runner
-RUN curl -o runner.tar.gz -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz \
-    && tar xzf runner.tar.gz \
-    && rm runner.tar.gz \
-    && ./bin/installdependencies.sh \
-    && chown -R runner:runner /home/runner
+WORKDIR /app
 
-# Install container hooks
-RUN mkdir -p /home/runner/hooks \
-    && curl -f -L -o /home/runner/hooks/runner-container-hooks.zip https://github.com/actions/runner-container-hooks/releases/download/v${RUNNER_CONTAINER_HOOKS_VERSION}/runner-container-hooks-${RUNNER_CONTAINER_HOOKS_VERSION}.zip \
-    && unzip /home/runner/hooks/runner-container-hooks.zip -d /home/runner/hooks \
-    && rm /home/runner/hooks/runner-container-hooks.zip \
-    && chown -R runner:runner /home/runner/hooks
+# Create non-root user
+RUN addgroup -S app && adduser -S app -G app
 
-# Copy startup script
-COPY --chown=runner:runner start.sh /home/runner/start.sh
-RUN chmod +x /home/runner/start.sh
+# Install curl for healthcheck
+RUN apk add --no-cache curl
 
-USER runner
-ENTRYPOINT ["/home/runner/start.sh"]
+# Copy node_modules from deps stage and the application source
+COPY --from=deps /app/node_modules /app/node_modules
+COPY . ./
+
+# Expose app port
+EXPOSE 3000
+
+# Health check (optional but helpful)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
+  CMD curl -fsS http://127.0.0.1:3000/invalid || exit 1
+
+USER app
+
+CMD ["bun", "run", "src/index.js"]
