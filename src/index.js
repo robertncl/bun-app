@@ -15,25 +15,46 @@ export function startServer(port = 3000) {
   return serve({
     port,
     fetch(req) {
+      // Only allow GET requests
+      if (req.method !== 'GET') {
+        return new Response(
+          JSON.stringify({ error: 'Method not allowed' }),
+          { 
+            status: 405,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
       const url = new URL(req.url);
       const params = parseQuery(req.url);
       const a = parseFloat(params.a);
       const b = parseFloat(params.b);
 
-      function json(data) {
+      function json(data, status = 200) {
         return new Response(JSON.stringify(data), {
+          status,
           headers: { "Content-Type": "application/json" },
         });
       }
 
       if (["/add", "/subtract", "/multiply", "/divide"].includes(url.pathname)) {
         const op = url.pathname.slice(1);
-        return json(calculator(op, a, b));
+        const result = calculator(op, a, b);
+        
+        // Return appropriate status code based on result
+        if (result.error) {
+          return json(result, 400);
+        }
+        return json(result);
       }
 
       return new Response(
-        "Calculator API. Use /add, /subtract, /multiply, or /divide with query params a and b.",
-        { status: 404 }
+        JSON.stringify({ 
+          error: 'Not found',
+          message: 'Calculator API. Use /add, /subtract, /multiply, or /divide with query params a and b.'
+        }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     },
   });
