@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bun Calculator</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; margin: 2rem; background: #0f172a; color: #e2e8f0; }
+    .card { max-width: 520px; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,.3); }
+    h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+    .row { display: flex; gap: .75rem; margin-bottom: .75rem; }
+    input, select { flex: 1; padding: .6rem .7rem; border-radius: 8px; border: 1px solid #374151; background: #0b1220; color: #e5e7eb; }
+    button { padding: .6rem .9rem; border-radius: 8px; border: 1px solid #10b981; background: #10b981; color: #06291f; font-weight: 600; cursor: pointer; }
+    button:hover { filter: brightness(1.05); }
+    .result { margin-top: 1rem; padding: .75rem; border-radius: 8px; background: #0b1220; border: 1px solid #374151; min-height: 2.25rem; }
+    .error { color: #f87171; }
+    footer { margin-top: 2rem; color: #9ca3af; font-size: .85rem; }
+    a { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Bun Calculator</h1>
+    <div class="row">
+      <input id="a" type="number" placeholder="a" inputmode="decimal" />
+      <select id="op">
+        <option value="add">+</option>
+        <option value="subtract">-</option>
+        <option value="multiply">×</option>
+        <option value="divide">÷</option>
+      </select>
+      <input id="b" type="number" placeholder="b" inputmode="decimal" />
+    </div>
+    <div class="row">
+      <button id="calc">Calculate</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+    <div id="out" class="result" aria-live="polite"></div>
+  </div>
+  <footer>
+    API endpoints: <code>/add</code>, <code>/subtract</code>, <code>/multiply</code>, <code>/divide</code>
+  </footer>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    async function call(op, a, b) {
+      const url = `/${op}?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
+      const res = await fetch(url, { method: 'GET' });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, data };
+    }
+    function show(text, isError) {
+      const el = $('out');
+      el.textContent = text;
+      el.classList.toggle('error', !!isError);
+    }
+    $('calc').addEventListener('click', async () => {
+      const a = $('a').value;
+      const b = $('b').value;
+      const op = $('op').value;
+      if (a === '' || b === '') {
+        show('Please enter both numbers', true);
+        return;
+      }
+      const { status, data } = await call(op, a, b);
+      if (status === 200 && data && typeof data.result !== 'undefined') {
+        show(`Result: ${data.result}`);
+      } else {
+        show(data && data.error ? `Error: ${data.error}` : 'Unexpected error', true);
+      }
+    });
+    $('clear').addEventListener('click', () => {
+      $('a').value = '';
+      $('b').value = '';
+      show('');
+    });
+  </script>
+</body>
+</html>
+
+

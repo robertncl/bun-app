@@ -90,6 +90,15 @@ describe('Calculator API', () => {
     expect(res.headers.get('Access-Control-Allow-Methods')).toContain('GET');
   });
 
+  test('GET / returns HTML index', async () => {
+    const res = await callApi('/');
+    expect(res.status).toBe(200);
+    const contentType = res.headers.get('Content-Type');
+    expect(contentType).toMatch(/text\/html/);
+    const html = await res.text();
+    expect(html).toMatch(/Bun Calculator/);
+  });
+
   test('missing parameters return error', async () => {
     const res = await callApi('/add');
     expect(res.status).toBe(400);
