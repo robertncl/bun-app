@@ -15,6 +15,8 @@ export function startServer(port = 3000) {
   return serve({
     port,
     fetch(req) {
+      const url = new URL(req.url);
+
       // Handle CORS preflight and restrict methods
       if (req.method === 'OPTIONS') {
         return new Response(null, {
@@ -40,7 +42,6 @@ export function startServer(port = 3000) {
         );
       }
 
-      const url = new URL(req.url);
       const params = parseQuery(req.url);
       const a = parseFloat(params.a);
       const b = parseFloat(params.b);
@@ -57,6 +58,30 @@ export function startServer(port = 3000) {
             "Access-Control-Allow-Origin": "*"
           },
         });
+      }
+
+      // Serve static files from public/ and root index
+      if (url.pathname === "/" || url.pathname === "/index.html") {
+        const file = Bun.file("public/index.html");
+        if (file.size > 0) {
+          return new Response(file, {
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              "X-Content-Type-Options": "nosniff",
+              "Access-Control-Allow-Origin": "*"
+            }
+          });
+        }
+      }
+
+      if (url.pathname.startsWith("/public/") || url.pathname.startsWith("/assets/")) {
+        const fsPath = url.pathname.replace(/^\/(public|assets)\//, "public/");
+        const file = Bun.file(fsPath);
+        if (file.size > 0) {
+          // very basic content type detection
+          const type = fsPath.endsWith('.css') ? 'text/css' : fsPath.endsWith('.js') ? 'text/javascript' : fsPath.endsWith('.png') ? 'image/png' : fsPath.endsWith('.jpg') || fsPath.endsWith('.jpeg') ? 'image/jpeg' : 'application/octet-stream';
+          return new Response(file, { headers: { "Content-Type": type, "X-Content-Type-Options": "nosniff", "Access-Control-Allow-Origin": "*" } });
+        }
       }
 
       if (["/add", "/subtract", "/multiply", "/divide"].includes(url.pathname)) {
