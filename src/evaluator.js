@@ -24,6 +24,22 @@ const FUNCTIONS = {
   max: (a, b) => Math.max(a, b),
 };
 
+const FUNCTION_ARITY = {
+  sin: 1,
+  cos: 1,
+  tan: 1,
+  asin: 1,
+  acos: 1,
+  atan: 1,
+  sqrt: 1,
+  log: 1,
+  ln: 1,
+  abs: 1,
+  pow: 2,
+  min: 2,
+  max: 2,
+};
+
 const OPERATORS = {
   '+': { prec: 2, assoc: 'L', args: 2, fn: (a, b) => a + b },
   '-': { prec: 2, assoc: 'L', args: 2, fn: (a, b) => a - b },
@@ -64,8 +80,13 @@ function toRPN(input) {
     if (t.type === 'number') {
       output.push(t);
     } else if (t.type === 'ident') {
-      // could be function or constant; push ident and handle on evaluation
-      output.push(t);
+      // function if next token is lparen, else constant
+      const next = tokens[i + 1];
+      if (next && next.type === 'lparen') {
+        stack.push({ type: 'func', value: t.value });
+      } else {
+        output.push(t);
+      }
     } else if (t.type === 'comma') {
       while (stack.length && stack[stack.length - 1].value !== '(') {
         output.push(stack.pop());
@@ -91,6 +112,10 @@ function toRPN(input) {
       }
       if (!stack.length) throw new Error('Mismatched parentheses');
       stack.pop(); // pop '('
+      // if function on top, pop it to output
+      if (stack.length && stack[stack.length - 1].type === 'func') {
+        output.push(stack.pop());
+      }
     }
   }
 
@@ -169,6 +194,18 @@ function evalRPN(rpn, options) {
       } else {
         throw new Error('Unknown identifier');
       }
+    } else if (t.type === 'func') {
+      const name = t.value;
+      const fn = FUNCTIONS[name];
+      if (!fn) throw new Error('Unknown function');
+      const arity = FUNCTION_ARITY[name] ?? 1;
+      const args = [];
+      for (let i = 0; i < arity; i++) {
+        if (!stack.length) throw new Error('Insufficient values');
+        args.unshift(stack.pop());
+      }
+      const val = fn(...args, options);
+      stack.push(val);
     } else if (t.type === 'op') {
       const op = OPERATORS[t.value];
       if (!op) throw new Error('Unknown operator');
