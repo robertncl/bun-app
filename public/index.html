@@ -19,60 +19,87 @@
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Bun Calculator</h1>
-    <div class="row">
-      <input id="a" type="number" placeholder="a" inputmode="decimal" />
-      <select id="op">
-        <option value="add">+</option>
-        <option value="subtract">-</option>
-        <option value="multiply">×</option>
-        <option value="divide">÷</option>
-      </select>
-      <input id="b" type="number" placeholder="b" inputmode="decimal" />
+  <div class="card" id="app">
+    <h1>Scientific Calculator</h1>
+    <div class="row" style="margin-bottom:1rem;">
+      <label style="display:flex; gap:.5rem; align-items:center;">
+        <input id="deg" type="checkbox" /> Degrees
+      </label>
     </div>
-    <div class="row">
-      <button id="calc">Calculate</button>
-      <button id="clear" type="button">Clear</button>
+    <div class="result" id="display">0</div>
+    <div class="row" style="flex-wrap: wrap; gap:.5rem;">
+      <button data-fn="clear">AC</button>
+      <button data-op="u-">±</button>
+      <button data-fn="percent">%</button>
+      <button data-op="/">÷</button>
+
+      <button data-fn="func" data-name="sin">sin</button>
+      <button data-fn="func" data-name="cos">cos</button>
+      <button data-fn="func" data-name="tan">tan</button>
+      <button data-op="*">×</button>
+
+      <button data-fn="func" data-name="sqrt">√</button>
+      <button data-fn="func" data-name="log">log</button>
+      <button data-fn="func" data-name="ln">ln</button>
+      <button data-op="-">−</button>
+
+      <button data-num>7</button>
+      <button data-num>8</button>
+      <button data-num>9</button>
+      <button data-op=">" style="display:none"></button>
+      <button data-op="+">+</button>
+
+      <button data-num>4</button>
+      <button data-num>5</button>
+      <button data-num>6</button>
+      <button data-op="^">x^y</button>
+
+      <button data-num>1</button>
+      <button data-num>2</button>
+      <button data-num>3</button>
+      <button id="equals">=</button>
+
+      <button data-num>0</button>
+      <button data-dot>.</button>
+      <button data-const="pi">π</button>
+      <button data-const="e">e</button>
     </div>
-    <div id="out" class="result" aria-live="polite"></div>
   </div>
   <footer>
-    API endpoints: <code>/add</code>, <code>/subtract</code>, <code>/multiply</code>, <code>/divide</code>
+    Try expressions like <code>sin(30)</code> (toggle Degrees), <code>sqrt(2)</code>, <code>2^8</code>
   </footer>
   <script>
     const $ = (id) => document.getElementById(id);
-    async function call(op, a, b) {
-      const url = `/${op}?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
-      const res = await fetch(url, { method: 'GET' });
+    const display = $('display');
+    let expr = '';
+    function updateDisplay() { display.textContent = expr || '0'; }
+    function append(s) { expr += s; updateDisplay(); }
+    function clearAll() { expr = ''; updateDisplay(); }
+    async function evaluate() {
+      const qs = new URLSearchParams({ expr, deg: $('deg').checked ? '1' : '0' });
+      const res = await fetch(`/calculate?${qs.toString()}`);
       const data = await res.json().catch(() => ({}));
-      return { status: res.status, data };
-    }
-    function show(text, isError) {
-      const el = $('out');
-      el.textContent = text;
-      el.classList.toggle('error', !!isError);
-    }
-    $('calc').addEventListener('click', async () => {
-      const a = $('a').value;
-      const b = $('b').value;
-      const op = $('op').value;
-      if (a === '' || b === '') {
-        show('Please enter both numbers', true);
-        return;
-      }
-      const { status, data } = await call(op, a, b);
-      if (status === 200 && data && typeof data.result !== 'undefined') {
-        show(`Result: ${data.result}`);
+      if (res.ok && data && typeof data.result !== 'undefined') {
+        expr = String(data.result);
+        updateDisplay();
       } else {
-        show(data && data.error ? `Error: ${data.error}` : 'Unexpected error', true);
+        display.textContent = data.error || 'Error';
+        display.classList.add('error');
+        setTimeout(() => { display.classList.remove('error'); updateDisplay(); }, 1200);
       }
-    });
-    $('clear').addEventListener('click', () => {
-      $('a').value = '';
-      $('b').value = '';
-      show('');
-    });
+    }
+    document.querySelectorAll('[data-num]').forEach(b => b.addEventListener('click', () => append(b.textContent)));
+    document.querySelector('[data-dot]').addEventListener('click', () => append('.'));
+    document.querySelectorAll('[data-op]').forEach(b => b.addEventListener('click', () => {
+      const v = b.getAttribute('data-op');
+      append(v === 'u-' ? '-' : v);
+    }));
+    document.querySelectorAll('[data-fn="func"]').forEach(b => b.addEventListener('click', () => {
+      append(b.getAttribute('data-name') + '(');
+    }));
+    document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => append(b.getAttribute('data-const'))));
+    document.querySelector('[data-fn="clear"]').addEventListener('click', clearAll);
+    document.getElementById('equals').addEventListener('click', evaluate);
   </script>
 </body>
 </html>

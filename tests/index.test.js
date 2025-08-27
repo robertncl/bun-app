@@ -119,6 +119,31 @@ describe('Calculator API', () => {
     const data = await res.json();
     expect(data).toEqual({ result: 7.5 });
   });
+
+  describe('scientific /calculate', () => {
+    test('evaluates simple expression', async () => {
+      const res = await callApi('/calculate?expr=2%2b3*4');
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.result).toBe(14);
+    });
+    test('evaluates sin with degrees', async () => {
+      const res = await callApi('/calculate?expr=sin(30)&deg=1');
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(Math.abs(data.result - 0.5)).toBeLessThan(1e-10);
+    });
+    test('evaluates sqrt and power', async () => {
+      const res = await callApi('/calculate?expr=sqrt(16)%2b2^3');
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.result).toBe(12);
+    });
+    test('invalid expression returns 400', async () => {
+      const res = await callApi('/calculate?expr=sin(');
+      expect(res.status).toBe(400);
+    });
+  });
 });
 
 describe('calculator function', () => {

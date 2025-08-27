@@ -2,6 +2,7 @@
 
 import { serve } from "bun";
 import { calculator } from "./calculator.js";
+import { evaluateExpression } from "./evaluator.js";
 
 function parseQuery(url) {
   const params = {};
@@ -92,6 +93,14 @@ export function startServer(port = 3000) {
         if (result.error) {
           return json(result, 400);
         }
+        return json(result);
+      }
+
+      if (url.pathname === '/calculate') {
+        const expr = params.expr || '';
+        const deg = params.deg === '1' || params.deg === 'true';
+        const result = evaluateExpression(expr, { deg });
+        if (result.error) return json(result, 400);
         return json(result);
       }
 
