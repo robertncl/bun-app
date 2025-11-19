@@ -6,7 +6,8 @@
   "scripts": {
     "start": "bun run src/index.js",
     "test": "bun test",
-    "dev": "bun --hot src/index.js"
+    "dev": "bun --hot src/index.js",
+    "build": "bun build ./src/index.js --outdir ./dist --target bun"
   },
   "dependencies": {
     "bun": "^1.2.20"
