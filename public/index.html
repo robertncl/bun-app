@@ -1,107 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bun Calculator</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; margin: 2rem; background: #0f172a; color: #e2e8f0; }
-    .card { max-width: 520px; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,.3); }
-    h1 { margin: 0 0 1rem; font-size: 1.5rem; }
-    .row { display: flex; gap: .75rem; margin-bottom: .75rem; }
-    input, select { flex: 1; padding: .6rem .7rem; border-radius: 8px; border: 1px solid #374151; background: #0b1220; color: #e5e7eb; }
-    button { padding: .6rem .9rem; border-radius: 8px; border: 1px solid #10b981; background: #10b981; color: #06291f; font-weight: 600; cursor: pointer; }
-    button:hover { filter: brightness(1.05); }
-    .result { margin-top: 1rem; padding: .75rem; border-radius: 8px; background: #0b1220; border: 1px solid #374151; min-height: 2.25rem; }
-    .error { color: #f87171; }
-    footer { margin-top: 2rem; color: #9ca3af; font-size: .85rem; }
-    a { color: #60a5fa; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockTracker Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="card" id="app">
-    <h1>Scientific Calculator</h1>
-    <div class="row" style="margin-bottom:1rem;">
-      <label style="display:flex; gap:.5rem; align-items:center;">
-        <input id="deg" type="checkbox" /> Degrees
-      </label>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 17L9 11L13 15L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 7H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 7V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>StockTracker Pro</span>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search stocks (e.g., AAPL)...">
+                <div id="searchResults" class="search-results hidden"></div>
+            </div>
+        </header>
+
+        <main>
+            <div id="dashboard" class="dashboard">
+                <!-- Stock details will be injected here -->
+                <div class="placeholder-message">
+                    <h2>Track the Market in Real-Time</h2>
+                    <p>Search for a stock to view live quotes and historical performance.</p>
+                </div>
+            </div>
+        </main>
     </div>
-    <div class="result" id="display">0</div>
-    <div class="row" style="flex-wrap: wrap; gap:.5rem;">
-      <button data-fn="clear">AC</button>
-      <button data-op="u-">±</button>
-      <button data-fn="percent">%</button>
-      <button data-op="/">÷</button>
-
-      <button data-fn="func" data-name="sin">sin</button>
-      <button data-fn="func" data-name="cos">cos</button>
-      <button data-fn="func" data-name="tan">tan</button>
-      <button data-op="*">×</button>
-
-      <button data-fn="func" data-name="sqrt">√</button>
-      <button data-fn="func" data-name="log">log</button>
-      <button data-fn="func" data-name="ln">ln</button>
-      <button data-op="-">−</button>
-
-      <button data-num>7</button>
-      <button data-num>8</button>
-      <button data-num>9</button>
-      <button data-op=">" style="display:none"></button>
-      <button data-op="+">+</button>
-
-      <button data-num>4</button>
-      <button data-num>5</button>
-      <button data-num>6</button>
-      <button data-op="^">x^y</button>
-
-      <button data-num>1</button>
-      <button data-num>2</button>
-      <button data-num>3</button>
-      <button id="equals">=</button>
-
-      <button data-num>0</button>
-      <button data-dot>.</button>
-      <button data-const="pi">π</button>
-      <button data-const="e">e</button>
-    </div>
-  </div>
-  <footer>
-    Try expressions like <code>sin(30)</code> (toggle Degrees), <code>sqrt(2)</code>, <code>2^8</code>
-  </footer>
-  <script>
-    const $ = (id) => document.getElementById(id);
-    const display = $('display');
-    let expr = '';
-    function updateDisplay() { display.textContent = expr || '0'; }
-    function append(s) { expr += s; updateDisplay(); }
-    function clearAll() { expr = ''; updateDisplay(); }
-    async function evaluate() {
-      const qs = new URLSearchParams({ expr, deg: $('deg').checked ? '1' : '0' });
-      const res = await fetch(`/calculate?${qs.toString()}`);
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data && typeof data.result !== 'undefined') {
-        expr = String(data.result);
-        updateDisplay();
-      } else {
-        display.textContent = data.error || 'Error';
-        display.classList.add('error');
-        setTimeout(() => { display.classList.remove('error'); updateDisplay(); }, 1200);
-      }
-    }
-    document.querySelectorAll('[data-num]').forEach(b => b.addEventListener('click', () => append(b.textContent)));
-    document.querySelector('[data-dot]').addEventListener('click', () => append('.'));
-    document.querySelectorAll('[data-op]').forEach(b => b.addEventListener('click', () => {
-      const v = b.getAttribute('data-op');
-      append(v === 'u-' ? '-' : v);
-    }));
-    document.querySelectorAll('[data-fn="func"]').forEach(b => b.addEventListener('click', () => {
-      append(b.getAttribute('data-name') + '(');
-    }));
-    document.querySelectorAll('[data-const]').forEach(b => b.addEventListener('click', () => append(b.getAttribute('data-const'))));
-    document.querySelector('[data-fn="clear"]').addEventListener('click', clearAll);
-    document.getElementById('equals').addEventListener('click', evaluate);
-  </script>
+    <script src="app.js"></script>
 </body>
 </html>
-
-

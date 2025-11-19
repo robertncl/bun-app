@@ -1,121 +1,87 @@
-// This file is the entry point of the application. It initializes the Bun server and sets up middleware and routes.
-
 import { serve } from "bun";
-import { calculator } from "./calculator.js";
-import { evaluateExpression } from "./evaluator.js";
+import fs from "node:fs";
+import path from "node:path";
 
-function parseQuery(url) {
-  const params = {};
-  for (const [key, value] of new URL(url).searchParams.entries()) {
-    params[key] = value;
+// Mock Data Service
+const STOCKS = {
+  AAPL: { name: "Apple Inc.", price: 150.00, change: 0.5, history: [] },
+  GOOGL: { name: "Alphabet Inc.", price: 2800.00, change: -1.2, history: [] },
+  TSLA: { name: "Tesla, Inc.", price: 700.00, change: 2.3, history: [] },
+  AMZN: { name: "Amazon.com, Inc.", price: 3300.00, change: 0.8, history: [] },
+  MSFT: { name: "Microsoft Corporation", price: 290.00, change: 0.1, history: [] },
+};
+
+// Generate initial history
+for (const symbol in STOCKS) {
+  let price = STOCKS[symbol].price;
+  for (let i = 0; i < 30; i++) {
+    STOCKS[symbol].history.push(price);
+    price = price * (1 + (Math.random() * 0.04 - 0.02)); // +/- 2%
   }
-  return params;
+  STOCKS[symbol].history.reverse(); // Oldest first
 }
 
-export function startServer(port = 3000) {
-  return serve({
-    port,
-    fetch(req) {
-      const url = new URL(req.url);
-
-      // Handle CORS preflight and restrict methods
-      if (req.method === 'OPTIONS') {
-        return new Response(null, {
-          status: 204,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Max-Age": "600"
-          }
-        });
+const server = serve({
+  port: 3000,
+  async fetch(req) {
+    const url = new URL(req.url);
+    
+    // API Routes
+    if (url.pathname.startsWith("/api")) {
+      const headers = { "Content-Type": "application/json" };
+      
+      if (url.pathname === "/api/search") {
+        const query = url.searchParams.get("q")?.toUpperCase() || "";
+        const results = Object.keys(STOCKS)
+          .filter(symbol => symbol.includes(query) || STOCKS[symbol].name.toUpperCase().includes(query))
+          .map(symbol => ({ symbol, name: STOCKS[symbol].name }));
+        return new Response(JSON.stringify(results), { headers });
       }
-      if (req.method !== 'GET') {
-        return new Response(
-          JSON.stringify({ error: 'Method not allowed' }),
-          { 
-            status: 405,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*"
-            }
-          }
-        );
-      }
-
-      const params = parseQuery(req.url);
-      const a = parseFloat(params.a);
-      const b = parseFloat(params.b);
-
-      function json(data, status = 200) {
-        return new Response(JSON.stringify(data), {
-          status,
-          headers: {
-            "Content-Type": "application/json",
-            "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": "DENY",
-            "Referrer-Policy": "no-referrer",
-            "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
-            "Access-Control-Allow-Origin": "*"
-          },
-        });
-      }
-
-      // Serve static files from public/ and root index
-      if (url.pathname === "/" || url.pathname === "/index.html") {
-        const file = Bun.file("public/index.html");
-        if (file.size > 0) {
-          return new Response(file, {
-            headers: {
-              "Content-Type": "text/html; charset=utf-8",
-              "X-Content-Type-Options": "nosniff",
-              "Access-Control-Allow-Origin": "*"
-            }
-          });
+      
+      if (url.pathname.startsWith("/api/quote/")) {
+        const symbol = url.pathname.split("/").pop()?.toUpperCase();
+        if (symbol && STOCKS[symbol]) {
+          // Simulate live update
+          const change = (Math.random() * 2 - 1); // +/- 1
+          STOCKS[symbol].price += change;
+          STOCKS[symbol].change = (change / STOCKS[symbol].price) * 100;
+          STOCKS[symbol].history.shift();
+          STOCKS[symbol].history.push(STOCKS[symbol].price);
+          
+          return new Response(JSON.stringify({
+            symbol,
+            ...STOCKS[symbol]
+          }), { headers });
         }
+        return new Response("Not Found", { status: 404 });
       }
-
-      if (url.pathname.startsWith("/public/") || url.pathname.startsWith("/assets/")) {
-        const fsPath = url.pathname.replace(/^\/(public|assets)\//, "public/");
-        const file = Bun.file(fsPath);
-        if (file.size > 0) {
-          // very basic content type detection
-          const type = fsPath.endsWith('.css') ? 'text/css' : fsPath.endsWith('.js') ? 'text/javascript' : fsPath.endsWith('.png') ? 'image/png' : fsPath.endsWith('.jpg') || fsPath.endsWith('.jpeg') ? 'image/jpeg' : 'application/octet-stream';
-          return new Response(file, { headers: { "Content-Type": type, "X-Content-Type-Options": "nosniff", "Access-Control-Allow-Origin": "*" } });
+      
+      if (url.pathname.startsWith("/api/history/")) {
+        const symbol = url.pathname.split("/").pop()?.toUpperCase();
+        if (symbol && STOCKS[symbol]) {
+          return new Response(JSON.stringify(STOCKS[symbol].history), { headers });
         }
+        return new Response("Not Found", { status: 404 });
       }
+      
+      return new Response("Not Found", { status: 404 });
+    }
 
-      if (["/add", "/subtract", "/multiply", "/divide"].includes(url.pathname)) {
-        const op = url.pathname.slice(1);
-        const result = calculator(op, a, b);
-        
-        // Return appropriate status code based on result
-        if (result.error) {
-          return json(result, 400);
-        }
-        return json(result);
-      }
+    // Static File Serving
+    let filePath = path.join("public", url.pathname === "/" ? "index.html" : url.pathname);
+    
+    // Security check to prevent directory traversal
+    if (!filePath.startsWith("public")) {
+        return new Response("Forbidden", { status: 403 });
+    }
 
-      if (url.pathname === '/calculate') {
-        const expr = params.expr || '';
-        const deg = params.deg === '1' || params.deg === 'true';
-        const result = evaluateExpression(expr, { deg });
-        if (result.error) return json(result, 400);
-        return json(result);
-      }
+    const file = Bun.file(filePath);
+    if (await file.exists()) {
+      return new Response(file);
+    }
 
-      return new Response(
-        JSON.stringify({ 
-          error: 'Not found',
-          message: 'Calculator API. Use /add, /subtract, /multiply, or /divide with query params a and b.'
-        }),
-        { status: 404, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
-    },
-  });
-}
+    return new Response("Not Found", { status: 404 });
+  },
+});
 
-if (import.meta.main) {
-  startServer();
-  console.log("Calculator server is running on http://localhost:3000");
-}
+console.log(`Listening on http://localhost:${server.port} ...`);

@@ -1,0 +1,185 @@
+:root {
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent: #38bdf8;
+    --success: #4ade80;
+    --danger: #f87171;
+    --glass: rgba(30, 41, 59, 0.7);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding: 1rem 2rem;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--accent);
+}
+
+.search-bar {
+    position: relative;
+    width: 300px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    z-index: 10;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.search-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+}
+
+.search-result-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.hidden {
+    display: none;
+}
+
+.dashboard {
+    display: grid;
+    gap: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.stock-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.stock-info h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stock-name {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.stock-price {
+    text-align: right;
+}
+
+.current-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: block;
+}
+
+.price-change {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+.price-up {
+    color: var(--success);
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.price-down {
+    color: var(--danger);
+    background: rgba(248, 113, 113, 0.1);
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}
+
+.placeholder-message {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-secondary);
+}
+
+.placeholder-message h2 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
