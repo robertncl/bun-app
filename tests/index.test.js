@@ -1,6 +1,5 @@
 import { startServer } from '../src/index.js';
-import { calculator } from '../src/calculator.js';
-const { fetch } = require('bun');
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 
 let server;
 let port;
@@ -10,162 +9,51 @@ beforeAll(() => {
   port = 3000 + Math.floor(Math.random() * 1000);
   server = startServer(port);
 });
+
 afterAll(() => {
   if (server && server.stop) server.stop();
 });
 
-describe('Calculator API', () => {
-  async function callApi(path, method = 'GET') {
-    const req = new Request(`http://localhost:${port}${path}`, { method });
+describe('Stock API', () => {
+  async function callApi(path) {
+    const req = new Request(`http://localhost:${port}${path}`);
     return await fetch(req);
   }
-
-  test('/add returns sum', async () => {
-    const res = await callApi('/add?a=2&b=3');
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data).toEqual({ result: 5 });
-  });
-
-  test('/subtract returns difference', async () => {
-    const res = await callApi('/subtract?a=5&b=2');
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data).toEqual({ result: 3 });
-  });
-
-  test('/multiply returns product', async () => {
-    const res = await callApi('/multiply?a=4&b=6');
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data).toEqual({ result: 24 });
-  });
-
-  test('/divide returns quotient', async () => {
-    const res = await callApi('/divide?a=8&b=2');
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data).toEqual({ result: 4 });
-  });
-
-  test('/divide by zero returns error with 400 status', async () => {
-    const res = await callApi('/divide?a=8&b=0');
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data).toEqual({ error: 'Division by zero' });
-  });
-
-  test('invalid numbers return error with 400 status', async () => {
-    const res = await callApi('/add?a=foo&b=bar');
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data).toEqual({ error: 'Invalid numbers' });
-  });
-
-  test('POST method returns 405', async () => {
-    const res = await callApi('/add?a=2&b=3', 'POST');
-    expect(res.status).toBe(405);
-    const data = await res.json();
-    expect(data).toEqual({ error: 'Method not allowed' });
-  });
-
-  test('PUT method returns 405', async () => {
-    const res = await callApi('/add?a=2&b=3', 'PUT');
-    expect(res.status).toBe(405);
-    const data = await res.json();
-    expect(data).toEqual({ error: 'Method not allowed' });
-  });
-
-  test('invalid endpoint returns 404', async () => {
-    const res = await callApi('/invalid');
-    expect(res.status).toBe(404);
-    const data = await res.json();
-    expect(data).toHaveProperty('error', 'Not found');
-    expect(data).toHaveProperty('message');
-  });
-
-  test('OPTIONS preflight returns 204 with CORS headers', async () => {
-    const res = await callApi('/add', 'OPTIONS');
-    expect(res.status).toBe(204);
-    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('GET');
-  });
 
   test('GET / returns HTML index', async () => {
     const res = await callApi('/');
     expect(res.status).toBe(200);
-    const contentType = res.headers.get('Content-Type');
-    expect(contentType).toMatch(/text\/html/);
     const html = await res.text();
-    expect(html).toMatch(/Bun Calculator/);
+    expect(html).toContain('StockTracker Pro');
   });
 
-  test('missing parameters return error', async () => {
-    const res = await callApi('/add');
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data).toEqual({ error: 'Invalid numbers' });
-  });
-
-  test('handles negative numbers', async () => {
-    const res = await callApi('/add?a=-5&b=3');
+  test('GET /api/search returns results', async () => {
+    const res = await callApi('/api/search?q=AAPL');
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data).toEqual({ result: -2 });
+    expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
+    expect(data[0].symbol).toBe('AAPL');
   });
 
-  test('handles decimal numbers', async () => {
-    const res = await callApi('/multiply?a=2.5&b=3');
+  test('GET /api/quote/:symbol returns stock data', async () => {
+    const res = await callApi('/api/quote/GOOGL');
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data).toEqual({ result: 7.5 });
+    expect(data.symbol).toBe('GOOGL');
+    expect(data.price).toBeGreaterThan(0);
   });
 
-  describe('scientific /calculate', () => {
-    test('evaluates simple expression', async () => {
-      const res = await callApi('/calculate?expr=2%2b3*4');
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(data.result).toBe(14);
-    });
-    test('evaluates sin with degrees', async () => {
-      const res = await callApi('/calculate?expr=sin(30)&deg=1');
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(Math.abs(data.result - 0.5)).toBeLessThan(1e-10);
-    });
-    test('evaluates sqrt and power', async () => {
-      const res = await callApi('/calculate?expr=sqrt(16)%2b2^3');
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(data.result).toBe(12);
-    });
-    test('invalid expression returns 400', async () => {
-      const res = await callApi('/calculate?expr=sin(');
-      expect(res.status).toBe(400);
-    });
+  test('GET /api/history/:symbol returns history array', async () => {
+    const res = await callApi('/api/history/TSLA');
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
   });
-});
 
-describe('calculator function', () => {
-  test('add', () => {
-    expect(calculator('add', 2, 3)).toEqual({ result: 5 });
-  });
-  test('subtract', () => {
-    expect(calculator('subtract', 5, 2)).toEqual({ result: 3 });
-  });
-  test('multiply', () => {
-    expect(calculator('multiply', 4, 6)).toEqual({ result: 24 });
-  });
-  test('divide', () => {
-    expect(calculator('divide', 8, 2)).toEqual({ result: 4 });
-  });
-  test('divide by zero', () => {
-    expect(calculator('divide', 8, 0)).toEqual({ error: 'Division by zero' });
-  });
-  test('invalid numbers', () => {
-    expect(calculator('add', 'foo', 'bar')).toEqual({ error: 'Invalid numbers' });
-  });
-  test('unknown operation', () => {
-    expect(calculator('mod', 5, 2)).toEqual({ error: 'Unknown operation' });
+  test('GET /api/quote/INVALID returns 404', async () => {
+    const res = await callApi('/api/quote/INVALID');
+    expect(res.status).toBe(404);
   });
 });

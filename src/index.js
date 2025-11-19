@@ -21,67 +21,76 @@ for (const symbol in STOCKS) {
   STOCKS[symbol].history.reverse(); // Oldest first
 }
 
-const server = serve({
-  port: 3000,
-  async fetch(req) {
-    const url = new URL(req.url);
-    
-    // API Routes
-    if (url.pathname.startsWith("/api")) {
-      const headers = { "Content-Type": "application/json" };
-      
-      if (url.pathname === "/api/search") {
-        const query = url.searchParams.get("q")?.toUpperCase() || "";
-        const results = Object.keys(STOCKS)
-          .filter(symbol => symbol.includes(query) || STOCKS[symbol].name.toUpperCase().includes(query))
-          .map(symbol => ({ symbol, name: STOCKS[symbol].name }));
-        return new Response(JSON.stringify(results), { headers });
-      }
-      
-      if (url.pathname.startsWith("/api/quote/")) {
-        const symbol = url.pathname.split("/").pop()?.toUpperCase();
-        if (symbol && STOCKS[symbol]) {
-          // Simulate live update
-          const change = (Math.random() * 2 - 1); // +/- 1
-          STOCKS[symbol].price += change;
-          STOCKS[symbol].change = (change / STOCKS[symbol].price) * 100;
-          STOCKS[symbol].history.shift();
-          STOCKS[symbol].history.push(STOCKS[symbol].price);
-          
-          return new Response(JSON.stringify({
-            symbol,
-            ...STOCKS[symbol]
-          }), { headers });
-        }
-        return new Response("Not Found", { status: 404 });
-      }
-      
-      if (url.pathname.startsWith("/api/history/")) {
-        const symbol = url.pathname.split("/").pop()?.toUpperCase();
-        if (symbol && STOCKS[symbol]) {
-          return new Response(JSON.stringify(STOCKS[symbol].history), { headers });
-        }
-        return new Response("Not Found", { status: 404 });
-      }
-      
-      return new Response("Not Found", { status: 404 });
-    }
 
-    // Static File Serving
-    let filePath = path.join("public", url.pathname === "/" ? "index.html" : url.pathname);
-    
-    // Security check to prevent directory traversal
-    if (!filePath.startsWith("public")) {
+
+export function startServer(port = 3000) {
+  const server = serve({
+    port,
+    async fetch(req) {
+      const url = new URL(req.url);
+
+      // API Routes
+      if (url.pathname.startsWith("/api")) {
+        const headers = { "Content-Type": "application/json" };
+
+        if (url.pathname === "/api/search") {
+          const query = url.searchParams.get("q")?.toUpperCase() || "";
+          const results = Object.keys(STOCKS)
+            .filter(symbol => symbol.includes(query) || STOCKS[symbol].name.toUpperCase().includes(query))
+            .map(symbol => ({ symbol, name: STOCKS[symbol].name }));
+          return new Response(JSON.stringify(results), { headers });
+        }
+
+        if (url.pathname.startsWith("/api/quote/")) {
+          const symbol = url.pathname.split("/").pop()?.toUpperCase();
+          if (symbol && STOCKS[symbol]) {
+            // Simulate live update
+            const change = (Math.random() * 2 - 1); // +/- 1
+            STOCKS[symbol].price += change;
+            STOCKS[symbol].change = (change / STOCKS[symbol].price) * 100;
+            STOCKS[symbol].history.shift();
+            STOCKS[symbol].history.push(STOCKS[symbol].price);
+
+            return new Response(JSON.stringify({
+              symbol,
+              ...STOCKS[symbol]
+            }), { headers });
+          }
+          return new Response("Not Found", { status: 404 });
+        }
+
+        if (url.pathname.startsWith("/api/history/")) {
+          const symbol = url.pathname.split("/").pop()?.toUpperCase();
+          if (symbol && STOCKS[symbol]) {
+            return new Response(JSON.stringify(STOCKS[symbol].history), { headers });
+          }
+          return new Response("Not Found", { status: 404 });
+        }
+
+        return new Response("Not Found", { status: 404 });
+      }
+
+      // Static File Serving
+      let filePath = path.join("public", url.pathname === "/" ? "index.html" : url.pathname);
+
+      // Security check to prevent directory traversal
+      if (!filePath.startsWith("public")) {
         return new Response("Forbidden", { status: 403 });
-    }
+      }
 
-    const file = Bun.file(filePath);
-    if (await file.exists()) {
-      return new Response(file);
-    }
+      const file = Bun.file(filePath);
+      if (await file.exists()) {
+        return new Response(file);
+      }
 
-    return new Response("Not Found", { status: 404 });
-  },
-});
+      return new Response("Not Found", { status: 404 });
+    },
+  });
+  return server;
+}
 
-console.log(`Listening on http://localhost:${server.port} ...`);
+if (import.meta.main) {
+  const server = startServer(3000);
+  console.log(`Listening on http://localhost:${server.port} ...`);
+}
+
