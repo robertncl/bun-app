@@ -103,7 +103,7 @@ jobs:
     # Upload the SARIF results so they can be reviewed or archived as an artifact.
     - name: Upload CodeQL SARIF results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v7
       with:
         name: codeql-results-${{ matrix.language }}
         path: codeql-results.sarif
