@@ -96,14 +96,17 @@ jobs:
         exit 1
 
     - name: Perform CodeQL Analysis
+      id: codeql
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
 
     # Upload the SARIF results so they can be reviewed or archived as an artifact.
+    # The analyze action provides the path in its outputs; only upload if it was
+    # generated to avoid the "no files were found" warning.
     - name: Upload CodeQL SARIF results
-      if: always()
-      uses: actions/upload-artifact@v7
+      if: always() && steps.codeql.outputs.sarif != ''
+      uses: actions/upload-artifact@v3
       with:
         name: codeql-results-${{ matrix.language }}
-        path: codeql-results.sarif
+        path: ${{ steps.codeql.outputs.sarif }}
