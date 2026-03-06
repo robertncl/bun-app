@@ -48,12 +48,18 @@ jobs:
         # SARIF is generated automatically and uploaded to GitHub Security tab
         upload: true
 
+    - name: Copy SARIF into workspace
+      if: always()
+      run: |
+        mkdir -p results
+        mv "${{ github.workspace }}/../results"/*.sarif results/ || echo "no sarif files"
+
     - name: Upload CodeQL SARIF Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: codeql-sarif-${{ matrix.language }}-${{ github.run_id }}
-        path: ../results/**/*.sarif
+        path: results/**/*.sarif
         retention-days: 30
         if-no-files-found: warn
         compression-level: 9
