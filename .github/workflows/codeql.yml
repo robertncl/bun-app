@@ -101,24 +101,10 @@ jobs:
       with:
         category: "/language:${{matrix.language}}"
 
-    - name: Debug SARIF output
-      if: always()
-      run: |
-        echo "CodeQL sarif output path: '${{ steps.codeql.outputs.sarif }}'"
-        if [ -n "${{ steps.codeql.outputs.sarif }}" ]; then
-          ls -l "${{ steps.codeql.outputs.sarif }}" || true
-          head -n 20 "${{ steps.codeql.outputs.sarif }}" || true
-        else
-          echo "No SARIF file was generated."
-        fi
-
-    # Upload the SARIF results so they can be reviewed or archived as an artifact.
-    # Always try to upload whatever path the analyze action reported; if the
-    # path is empty the upload step will be skipped automatically but the debug
-    # step will make that obvious.
+    # Upload the SARIF results from the results directory where CodeQL writes them.
     - name: Upload CodeQL SARIF results
       if: always()
       uses: actions/upload-artifact@v7
       with:
         name: codeql-results-${{ matrix.language }}
-        path: ${{ steps.codeql.outputs.sarif }}
+        path: results/*.sarif
