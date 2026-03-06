@@ -106,7 +106,7 @@ jobs:
     # generated to avoid the "no files were found" warning.
     - name: Upload CodeQL SARIF results
       if: always() && steps.codeql.outputs.sarif != ''
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v7
       with:
         name: codeql-results-${{ matrix.language }}
         path: ${{ steps.codeql.outputs.sarif }}
