@@ -10,11 +10,11 @@
     "build": "bun build ./src/index.js --outdir ./dist --target bun"
   },
   "dependencies": {
-    "bun": "^1.2.20",
+    "bun": "^1.3.14",
     "lodash": "4.18.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "^6.0.3"
   },
   "author": "Your Name",
   "license": "MIT"
