@@ -4,7 +4,11 @@
       "Bash(node -e ' *)",
       "Bash(bun outdated *)",
       "Bash(npm audit *)",
-      "Bash(bun test *)"
+      "Bash(bun test *)",
+      "Bash(bun run *)",
+      "Bash(curl -s http://localhost:3000/api/weather)",
+      "Bash(bun -e \"const d = await Bun.stdin.json\\(\\); console.log\\('Cities:', d.length, '| Sample:', d[0].name, d[0].temperature + '°C', d[0].condition\\)\")",
+      "Bash(kill %1)"
     ]
   }
 }
