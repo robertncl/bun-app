@@ -5,55 +5,70 @@ let server;
 let port;
 
 beforeAll(() => {
-  // Use dynamic port allocation to avoid conflicts
   port = 3000 + Math.floor(Math.random() * 1000);
   server = startServer(port);
 });
 
 afterAll(() => {
-  if (server && server.stop) server.stop();
+  if (server?.stop) server.stop();
 });
 
-describe('Stock API', () => {
-  async function callApi(path) {
-    const req = new Request(`http://localhost:${port}${path}`);
-    return await fetch(req);
+describe('Weather API', () => {
+  async function api(path) {
+    return fetch(`http://localhost:${port}${path}`);
   }
 
-  test('GET / returns HTML index', async () => {
-    const res = await callApi('/');
+  test('GET / returns HTML', async () => {
+    const res = await api('/');
     expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/html');
     const html = await res.text();
-    expect(html).toContain('StockTracker Pro');
+    expect(html).toContain('WeatherMap Live');
   });
 
-  test('GET /api/search returns results', async () => {
-    const res = await callApi('/api/search?q=AAPL');
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(Array.isArray(data)).toBe(true);
-    expect(data.length).toBeGreaterThan(0);
-    expect(data[0].symbol).toBe('AAPL');
-  });
-
-  test('GET /api/quote/:symbol returns stock data', async () => {
-    const res = await callApi('/api/quote/GOOGL');
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data.symbol).toBe('GOOGL');
-    expect(data.price).toBeGreaterThan(0);
-  });
-
-  test('GET /api/history/:symbol returns history array', async () => {
-    const res = await callApi('/api/history/TSLA');
+  test('GET /api/weather returns array of cities', async () => {
+    const res = await api('/api/weather');
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThan(0);
   });
 
-  test('GET /api/quote/INVALID returns 404', async () => {
-    const res = await callApi('/api/quote/INVALID');
+  test('each city has required weather fields', async () => {
+    const res = await api('/api/weather');
+    const data = await res.json();
+    const city = data[0];
+    expect(typeof city.id).toBe('string');
+    expect(typeof city.name).toBe('string');
+    expect(typeof city.lat).toBe('number');
+    expect(typeof city.lon).toBe('number');
+    expect(typeof city.temperature).toBe('number');
+    expect(typeof city.humidity).toBe('number');
+    expect(typeof city.windSpeed).toBe('number');
+    expect(typeof city.condition).toBe('string');
+  });
+
+  test('GET /api/weather/:id returns single city', async () => {
+    const res = await api('/api/weather/london');
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.id).toBe('london');
+    expect(data.name).toBe('London');
+    expect(typeof data.temperature).toBe('number');
+  });
+
+  test('GET /api/weather/unknown returns 404', async () => {
+    const res = await api('/api/weather/atlantis');
     expect(res.status).toBe(404);
+  });
+
+  test('unknown API route returns 404', async () => {
+    const res = await api('/api/unknown');
+    expect(res.status).toBe(404);
+  });
+
+  test('directory traversal is blocked', async () => {
+    const res = await api('/../package.json');
+    expect([403, 404]).toContain(res.status);
   });
 });

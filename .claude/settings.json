@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node -e ' *)",
       "Bash(bun outdated *)",
-      "Bash(npm audit *)"
+      "Bash(npm audit *)",
+      "Bash(bun test *)"
     ]
   }
 }
