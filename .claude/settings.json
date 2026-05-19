@@ -8,7 +8,14 @@
       "Bash(bun run *)",
       "Bash(curl -s http://localhost:3000/api/weather)",
       "Bash(bun -e \"const d = await Bun.stdin.json\\(\\); console.log\\('Cities:', d.length, '| Sample:', d[0].name, d[0].temperature + '°C', d[0].condition\\)\")",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl -s https://api.github.com/repos/actions/upload-artifact/releases/latest)",
+      "Bash(curl -s https://api.github.com/repos/ossf/scorecard-action/releases/latest)",
+      "Bash(curl -s https://api.github.com/repos/ossf/scorecard-action/commits/main)",
+      "Bash(curl -s https://api.github.com/repos/oven-sh/bun/releases/latest)",
+      "Bash(curl -s https://api.github.com/repos/github/codeql-action/releases/latest)",
+      "Bash(curl -s https://api.github.com/repos/github/codeql-action/commits/main)"
     ]
   }
 }
