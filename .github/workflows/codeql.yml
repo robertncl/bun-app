@@ -34,15 +34,15 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@26a1e570a60fdfa4479615ce1b9b70530319e14f # v2.25.4
+      uses: github/codeql-action/init@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3.36.0
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild for TypeScript
-      uses: github/codeql-action/autobuild@26a1e570a60fdfa4479615ce1b9b70530319e14f # v2.25.4
+      uses: github/codeql-action/autobuild@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3.36.0
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@26a1e570a60fdfa4479615ce1b9b70530319e14f # v2.25.4
+      uses: github/codeql-action/analyze@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3.36.0
       with:
         category: "/language:${{ matrix.language }}"
         # SARIF is generated automatically and uploaded to GitHub Security tab
