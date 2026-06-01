@@ -15,7 +15,7 @@ dist/
 *.log
 logs/
 
-bun.lockb
+bun.lock
 
 # System files
 .DS_Store

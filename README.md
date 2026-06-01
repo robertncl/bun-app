@@ -1,76 +1,117 @@
-# Bun Calculator API
+# BunTrade — Stock Trading Platform (MVP)
 
-This is a simple calculator API built with the Bun framework. It demonstrates how to set up a basic HTTP server with Bun to handle arithmetic operations via API endpoints.
+A paper-trading platform built with the [Bun](https://bun.sh) runtime. It serves a
+single-page trading dashboard backed by a simulated live market and a REST API for
+placing market orders against an in-memory portfolio.
+
+> ⚠️ **This is a simulation.** Prices are randomly generated, no real money or
+> brokerage is involved, and all state is held in memory (it resets on restart).
+> It is a learning/demo MVP, not a real trading system.
+
+## Features
+
+- **Live market** — 14 instruments (equities + crypto) whose prices random-walk every
+  2 seconds, each with day open/high/low, volume and a rolling price history.
+- **Trading dashboard** — searchable market list with live sparklines, a price chart
+  for the selected symbol, and a buy/sell ticket with an estimated cost.
+- **Paper portfolio** — a single account seeded with **$100,000**. Tracks cash, holdings
+  (with average cost), market value, and realized / unrealized P&L.
+- **Market orders** — buy/sell fill instantly at the current price, with validation for
+  funds, share count, symbol and quantity.
+- **No build step, no runtime dependencies** — vanilla JS/CSS front end served straight
+  from `public/`; charts are hand-rendered SVG.
 
 ## Project Structure
 
 ```
 bun-app
 ├── src
-│   └── index.js          # Entry point and main server logic
+│   └── index.js          # Bun server: market simulation, portfolio, order engine, API
+├── public
+│   ├── index.html        # Dashboard markup
+│   ├── app.js            # Front-end controller (polling, rendering, trading)
+│   └── style.css         # Dark trading theme
 ├── tests
-│   └── index.test.js     # Unit tests for the application
-├── package.json          # npm configuration file
-├── bun.lockb             # Bun dependency lock file
-├── tsconfig.json         # TypeScript configuration file
-└── README.md             # Project documentation
+│   └── index.test.js     # API + trading-engine tests
+├── package.json
+└── README.md
 ```
 
 ## Getting Started
 
-To get started with the Bun calculator app, follow these steps:
+```sh
+bun install
+bun run src/index.js      # or: bun run dev   (hot reload)
+```
 
-1. Clone the repository:
-   ```sh
-   git clone <repository-url>
-   cd bun-app
-   ```
+The server starts on http://localhost:3000.
 
-2. Install dependencies:
-   ```sh
-   bun install
-   ```
+## API
 
-3. Run the application:
-   ```sh
-   bun run src/index.js
-   ```
-   The server will start on http://localhost:3000
+| Method | Endpoint               | Description                                              |
+| ------ | ---------------------- | -------------------------------------------------------- |
+| GET    | `/api/health`          | Liveness probe — `{ "status": "ok" }`.                   |
+| GET    | `/api/stocks`          | All instruments with current price, change and sparkline.|
+| GET    | `/api/stocks/:symbol`  | One instrument with full price `history` (case-insensitive). |
+| GET    | `/api/portfolio`       | Cash, holdings, equity and realized/unrealized P&L.      |
+| GET    | `/api/orders`          | Executed orders, newest first.                           |
+| POST   | `/api/orders`          | Place a market order.                                    |
 
-## Calculator API Endpoints
+### Placing an order
 
-All endpoints expect two query parameters: `a` and `b` (numbers).
+```sh
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{ "symbol": "AAPL", "side": "buy", "quantity": 10 }'
+```
 
-- **GET /add?a=1&b=2**: Returns the sum of `a` and `b`.
-- **GET /subtract?a=5&b=3**: Returns the difference of `a` and `b`.
-- **GET /multiply?a=4&b=6**: Returns the product of `a` and `b`.
-- **GET /divide?a=8&b=2**: Returns the quotient of `a` divided by `b`.
-
-**Example Response:**
 ```json
 {
-  "result": 3
+  "order": { "id": 1, "symbol": "AAPL", "side": "buy", "quantity": 10, "price": 195.2, "total": 1952 },
+  "portfolio": { "cash": 98048, "equity": 100000, "holdings": [ ... ] }
 }
 ```
 
-If invalid numbers are provided, or division by zero is attempted, an error message is returned:
-```json
-{
-  "error": "Invalid numbers"
-}
-```
+Orders are rejected with HTTP `400` and an `{ "error": ... }` body for an unknown
+symbol, an invalid side, a non-positive/fractional quantity, insufficient funds (buy),
+or insufficient shares (sell).
 
 ## Testing
 
-To run the tests, use the following command:
 ```sh
 bun test
 ```
 
+The suite covers static serving, directory-traversal protection, every API endpoint,
+and the order engine (fills, P&L bookkeeping, and validation/rejection paths).
+
+## Vulnerability Scanning
+
+This project includes **Trivy** scanning for Docker image vulnerabilities.
+
+**Local scan** (requires Docker and Trivy):
+```sh
+./scan-image.sh              # Show summary
+./scan-image.sh --strict     # Fail on HIGH/CRITICAL
+./scan-image.sh --json       # Output JSON
+```
+
+**In CI**: the [`trivy-scan.yml`](.github/workflows/trivy-scan.yml) workflow
+automatically scans the image on push to `main`, on PR, and on-demand. Results are
+uploaded to GitHub's Security tab (SARIF format). The workflow runs the app's unit
+tests first to ensure a good build before scanning.
+
 ## Continuous Integration
 
-This project uses GitHub Actions to automatically install dependencies, run tests, and check that the server starts on every push or pull request to the `main` branch. See `.github/workflows/build.yaml` for details.
+GitHub Actions installs dependencies, runs `bun test`, and verifies the server boots
+on push/PR. See `.github/workflows/build.yaml`.
+
+## Roadmap / non-goals
+
+Out of scope for this MVP but natural next steps: persistence (DB), authentication and
+multi-user accounts, limit/stop orders, an order book and partial fills, and a real
+market-data feed.
 
 ## Contributing
 
-Feel free to submit issues or pull requests for improvements or bug fixes.
+Issues and pull requests welcome.

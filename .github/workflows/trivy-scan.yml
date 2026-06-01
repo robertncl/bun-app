@@ -1,0 +1,84 @@
+name: Trivy Container Scan
+
+on:
+  push:
+    branches:
+      - main
+      - update
+    paths:
+      - 'Dockerfile'
+      - 'package.json'
+      - 'src/**'
+      - '.github/workflows/trivy-scan.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'package.json'
+      - 'src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests before building image
+        run: bun test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+
+      - name: Build Docker image
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          push: false
+          load: true
+          tags: buntrade:latest
+
+      - name: Run Trivy vulnerability scan (SARIF)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: buntrade:latest
+          format: sarif
+          output: trivy-results.sarif
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3.36.0
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-container
+
+      - name: Run Trivy in table format (console output)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: buntrade:latest
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Fail if CRITICAL vulnerabilities found
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: buntrade:latest
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
