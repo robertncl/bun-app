@@ -29,6 +29,12 @@ body {
 .down { color: var(--down); }
 .num { font-variant-numeric: tabular-nums; }
 
+/* Keyboard focus ring — visible for keyboard users, not on mouse click. */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .app { display: flex; flex-direction: column; height: 100vh; }
 
 /* ---------- Header ---------- */
@@ -404,6 +410,118 @@ body {
 .market-list::-webkit-scrollbar-thumb,
 .panel-col::-webkit-scrollbar-thumb,
 .orders-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* ---------- Asset-class tabs ---------- */
+.asset-tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  padding: 0 1.25rem 0.7rem;
+  flex-shrink: 0;
+}
+.asset-tab {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.asset-tab:hover { color: var(--text); border-color: var(--border-strong); }
+.asset-tab.active { background: var(--surface-3); color: var(--text); border-color: var(--border-strong); }
+
+/* Leverage chip on futures rows */
+.row-tag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(76, 141, 255, 0.12);
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+/* ---------- Long / short controls ---------- */
+.side-btn.long.active { background: rgba(38, 208, 124, 0.15); color: var(--up); }
+.side-btn.short.active { background: rgba(246, 70, 93, 0.15); color: var(--down); }
+.place-btn.long { background: var(--up); }
+.place-btn.short { background: var(--down); color: #fff; }
+
+/* Derivatives contract metadata rows */
+.deriv-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.deriv-meta b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.pos-note { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+
+/* Direction badge (LONG / SHORT) */
+.dir-badge {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.dir-badge.long { background: rgba(38, 208, 124, 0.15); color: var(--up); }
+.dir-badge.short { background: rgba(246, 70, 93, 0.15); color: var(--down); }
+
+/* ---------- Portfolio groups & derivative positions ---------- */
+.pf-group-label {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0.7rem 0 0.4rem;
+}
+.pf-row.pos { gap: 0.5rem; padding: 0; }
+.pos-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  padding: 0.55rem 0 0.55rem 0.7rem;
+  cursor: pointer;
+}
+.close-btn {
+  flex-shrink: 0;
+  align-self: stretch;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0 0.7rem;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+.close-btn:hover { color: var(--down); background: rgba(246, 70, 93, 0.08); }
+.pos-note .close-btn {
+  align-self: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+}
 
 /* ---------- Responsive ---------- */
 @media (max-width: 880px) {
