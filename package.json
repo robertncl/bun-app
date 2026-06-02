@@ -1,7 +1,7 @@
 {
   "name": "buntrade",
   "version": "2.0.0",
-  "description": "BunTrade — a paper stock-trading platform MVP built on Bun",
+  "description": "BunTrade — a paper multi-asset (stocks, crypto, commodities, futures) trading platform MVP built on Bun",
   "main": "src/index.js",
   "scripts": {
     "start": "bun run src/index.js",
