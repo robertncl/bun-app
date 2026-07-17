@@ -1,14 +1,13 @@
 // BunTrade — front-end controller.
-// Polls the simulated market every couple of seconds and drives the dashboard:
+// Polls the simulated market every couple of seconds and drives the app:
 // market list, live price chart, trade ticket, portfolio and order history.
+// Visuals follow the "BunTrade Mobile" design (ACME design language, dark).
 //
 // Two instrument families share the UI. Spot instruments (equities, crypto,
 // commodities) buy/sell outright; futures are leveraged derivatives that trade
 // long or short on margin. The trade ticket and portfolio adapt to whichever
 // kind of instrument is selected.
 
-const UP = "#26d07c";
-const DOWN = "#f6465d";
 const POLL_MS = 2000;
 
 const ASSET_TABS = [
@@ -46,47 +45,32 @@ function compact(n) {
 const isFuture = (s) => s && s.kind === "future";
 
 // --- charts (dependency-free SVG) -----------------------------------------
-function sparkSVG(values, color) {
-  if (!values || values.length < 2) return "";
-  const w = 72, h = 26;
+// Both charts are plain polylines colored via the up/down-stroke classes so
+// they follow the ACME success/danger tokens.
+function polylinePoints(values, w, h, padY = 3) {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const line = values
+  return values
     .map((v, i) => {
       const x = (i / (values.length - 1)) * w;
-      const y = h - 2 - ((v - min) / range) * (h - 4);
-      return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+      const y = h - padY - ((v - min) / range) * (h - padY * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
-    <path d="${line}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+}
+
+function sparkSVG(values, up) {
+  if (!values || values.length < 2) return "";
+  return `<svg class="row-spark" viewBox="0 0 56 20" aria-hidden="true">
+    <polyline class="spark-path ${up ? "up-stroke" : "down-stroke"}" points="${polylinePoints(values, 56, 20)}"/>
   </svg>`;
 }
 
-function chartSVG(values, color) {
+function chartSVG(values, up) {
   if (!values || values.length < 2) return "";
-  const w = 320, h = 110;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const pts = values.map((v, i) => [
-    (i / (values.length - 1)) * w,
-    h - 6 - ((v - min) / range) * (h - 12),
-  ]);
-  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const area = `${line} L${w},${h} L0,${h} Z`;
-  const gid = "grad-" + Math.random().toString(36).slice(2, 8);
-  return `<svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
-    <defs>
-      <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${color}" stop-opacity="0.30"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <path d="${area}" fill="url(#${gid})"/>
-    <path d="${line}" fill="none" stroke="${color}" stroke-width="2"
-          stroke-linejoin="round" stroke-linecap="round"/>
+  return `<svg class="chart" viewBox="0 0 336 110" preserveAspectRatio="none" aria-hidden="true">
+    <polyline class="chart-path ${up ? "up-stroke" : "down-stroke"}" points="${polylinePoints(values, 336, 110)}"/>
   </svg>`;
 }
 
@@ -103,10 +87,12 @@ function rowHTML(s) {
   const up = s.changePct >= 0;
   const tag = isFuture(s) ? `<span class="row-tag">${s.leverage}×</span>` : "";
   return `<button class="row${s.symbol === selected ? " active" : ""}" data-symbol="${s.symbol}">
-    <span class="row-sym"><b>${s.symbol}${tag}</b><small>${s.name}</small></span>
-    <span class="row-last num">${money(s.price)}</span>
-    <span class="row-chg num ${up ? "up" : "down"}">${pct(s.changePct)}</span>
-    <span class="row-spark">${sparkSVG(s.spark, up ? UP : DOWN)}</span>
+    <span class="row-id"><b>${s.symbol}${tag}</b><small>${s.name}</small></span>
+    <span class="row-quote">
+      <span class="row-price num">${usd(s.price)}</span>
+      <span class="row-chg num ${up ? "up" : "down"}">${pct(s.changePct)}</span>
+    </span>
+    ${sparkSVG(s.spark, up)}
   </button>`;
 }
 
@@ -115,20 +101,21 @@ function updateRow(list, s) {
   if (!row) return;
   const up = s.changePct >= 0;
 
-  const last = row.querySelector(".row-last");
+  const price = row.querySelector(".row-price");
   const prev = prevPrice[s.symbol];
   if (prev !== undefined && s.price !== prev) {
-    last.classList.remove("tick-up", "tick-down");
-    void last.offsetWidth; // restart the flash animation
-    last.classList.add(s.price > prev ? "tick-up" : "tick-down");
+    price.classList.remove("tick-up", "tick-down");
+    void price.offsetWidth; // restart the flash animation
+    price.classList.add(s.price > prev ? "tick-up" : "tick-down");
   }
-  last.textContent = money(s.price);
+  price.textContent = usd(s.price);
 
   const chg = row.querySelector(".row-chg");
   chg.textContent = pct(s.changePct);
   chg.className = `row-chg num ${up ? "up" : "down"}`;
 
-  row.querySelector(".row-spark").innerHTML = sparkSVG(s.spark, up ? UP : DOWN);
+  const spark = row.querySelector("svg.row-spark");
+  if (spark) spark.outerHTML = sparkSVG(s.spark, up);
   row.classList.toggle("active", s.symbol === selected);
   prevPrice[s.symbol] = s.price;
 }
@@ -152,16 +139,13 @@ function renderMarketList() {
 function renderTabs() {
   const el = document.getElementById("asset-tabs");
   el.innerHTML = ASSET_TABS.map(
-    (t) => `<button class="asset-tab${t.id === assetFilter ? " active" : ""}" data-filter="${t.id}" aria-pressed="${t.id === assetFilter}">${t.label}</button>`,
+    (t) => `<button class="acme-tab" role="tab" data-filter="${t.id}" aria-selected="${t.id === assetFilter}">${t.label}</button>`,
   ).join("");
-  el.querySelectorAll(".asset-tab").forEach((b) =>
+  el.querySelectorAll(".acme-tab").forEach((b) =>
     b.addEventListener("click", () => {
       assetFilter = b.dataset.filter;
-      el.querySelectorAll(".asset-tab").forEach((x) => {
-        const on = x === b;
-        x.classList.toggle("active", on);
-        x.setAttribute("aria-pressed", String(on));
-      });
+      el.querySelectorAll(".acme-tab").forEach((x) =>
+        x.setAttribute("aria-selected", String(x === b)));
       renderMarketList();
     }));
 }
@@ -179,7 +163,6 @@ function renderQuote() {
   const s = stocks[selected];
   if (!s) return;
   const up = s.changePct >= 0;
-  const color = up ? UP : DOWN;
 
   document.getElementById("trade-head").innerHTML = `
     <div class="th-id">
@@ -191,19 +174,19 @@ function renderQuote() {
       <div class="chg ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${money(Math.abs(s.change))} (${pct(s.changePct)})</div>
     </div>`;
 
-  document.getElementById("trade-chart").innerHTML = chartSVG(s.spark, color);
+  document.getElementById("trade-chart").innerHTML = chartSVG(s.spark, up);
 
   document.getElementById("trade-stats").innerHTML = isFuture(s)
     ? `
-      <div><span>Notional</span><b>$${compact(s.notional)}</b></div>
-      <div><span>Leverage</span><b>${s.leverage}×</b></div>
-      <div><span>Margin</span><b>$${compact(s.marginPerContract)}</b></div>
-      <div><span>Expiry</span><b>${s.daysToExpiry}d</b></div>`
+      <div class="tile"><span>Notional</span><b>$${compact(s.notional)}</b></div>
+      <div class="tile"><span>Leverage</span><b>${s.leverage}×</b></div>
+      <div class="tile"><span>Margin</span><b>$${compact(s.marginPerContract)}</b></div>
+      <div class="tile"><span>Expiry</span><b>${s.daysToExpiry}d</b></div>`
     : `
-      <div><span>Open</span><b>${money(s.open)}</b></div>
-      <div><span>High</span><b>${money(s.dayHigh)}</b></div>
-      <div><span>Low</span><b>${money(s.dayLow)}</b></div>
-      <div><span>Volume</span><b>${compact(s.volume)}</b></div>`;
+      <div class="tile"><span>Open</span><b>${usd(s.open)}</b></div>
+      <div class="tile"><span>High</span><b>${usd(s.dayHigh)}</b></div>
+      <div class="tile"><span>Low</span><b>${usd(s.dayLow)}</b></div>
+      <div class="tile"><span>Volume</span><b>${compact(s.volume)}</b></div>`;
 }
 
 function renderTicket() {
@@ -222,16 +205,16 @@ function renderSpotTicket(s) {
       <button class="side-btn buy${side === "buy" ? " active" : ""}" data-side="buy">Buy</button>
       <button class="side-btn sell${side === "sell" ? " active" : ""}" data-side="sell">Sell</button>
     </div>
-    <label class="field">
-      <span>Quantity</span>
-      <input id="qty" type="number" min="1" step="1" value="1" inputmode="numeric" />
+    <label class="acme-field">
+      <span class="acme-label">Quantity</span>
+      <input id="qty" class="acme-input" type="number" min="1" step="1" value="1" inputmode="numeric" />
     </label>
     <div class="ticket-meta">
       <span>Est. ${side === "buy" ? "cost" : "proceeds"}</span>
       <span id="est-total">${usd(s.price)}</span>
     </div>
     ${held ? `<div class="held-note">Holding ${held.shares} @ ${usd(held.avgCost)} avg</div>` : ""}
-    <button id="place-order" class="place-btn ${side}">${side === "buy" ? "Buy" : "Sell"} ${s.symbol}</button>`;
+    <button id="place-order" class="acme-btn acme-btn--lg place-btn ${side === "buy" ? "acme-btn--primary" : "acme-btn--danger"}">${side === "buy" ? "Buy" : "Sell"} ${s.symbol}</button>`;
 
   wireTicket();
 }
@@ -245,15 +228,15 @@ function renderFutureTicket(s) {
       <button class="side-btn long${side === "long" ? " active" : ""}" data-side="long">Long</button>
       <button class="side-btn short${side === "short" ? " active" : ""}" data-side="short">Short</button>
     </div>
-    <label class="field">
-      <span>Contracts</span>
-      <input id="qty" type="number" min="1" step="1" value="1" inputmode="numeric" />
+    <label class="acme-field">
+      <span class="acme-label">Contracts</span>
+      <input id="qty" class="acme-input" type="number" min="1" step="1" value="1" inputmode="numeric" />
     </label>
     <div class="deriv-meta"><span>Margin required</span><b id="est-total">${usd(s.marginPerContract)}</b></div>
     <div class="deriv-meta"><span>Notional</span><b id="est-notional">${usd(s.notional)}</b></div>
     <div class="deriv-meta"><span>Leverage</span><b>${s.leverage}× · expires ${s.daysToExpiry}d</b></div>
     ${pos ? positionNote(pos) : ""}
-    <button id="place-order" class="place-btn ${side}">${side === "long" ? "Long" : "Short"} ${s.symbol}</button>`;
+    <button id="place-order" class="acme-btn acme-btn--lg place-btn ${side === "long" ? "acme-btn--primary" : "acme-btn--danger"}">${side === "long" ? "Long" : "Short"} ${s.symbol}</button>`;
 
   wireTicket();
 }
@@ -369,23 +352,23 @@ async function closePosition(symbol, contracts) {
   }
 }
 
-// --- header, portfolio, orders --------------------------------------------
+// --- account strip, portfolio, orders --------------------------------------
 function renderHeader() {
   if (!portfolio) return;
   const up = portfolio.totalPL >= 0;
   const margin = portfolio.marginUsed > 0
-    ? `<div class="hp"><span>Margin Used</span><b>${usd(portfolio.marginUsed)}</b></div>`
+    ? `<div class="hp"><span>Margin used</span><b>${usd(portfolio.marginUsed)}</b></div>`
     : "";
   document.getElementById("header-portfolio").innerHTML = `
     <div class="hp"><span>Equity</span><b>${usd(portfolio.equity)}</b></div>
     <div class="hp"><span>Total P&L</span><b class="${up ? "up" : "down"}">${signedUsd(portfolio.totalPL)} (${pct(portfolio.totalPLPct)})</b></div>
-    <div class="hp"><span>Buying Power</span><b>${usd(portfolio.cash)}</b></div>
+    <div class="hp"><span>Buying power</span><b>${usd(portfolio.cash)}</b></div>
     ${margin}`;
 }
 
 function holdingRow(h) {
   const up = h.unrealizedPL >= 0;
-  return `<button class="pf-row" data-kind="spot" data-symbol="${h.symbol}">
+  return `<button class="pf-row tile" data-kind="spot" data-symbol="${h.symbol}">
     <span class="pf-id"><b>${h.symbol}</b><small>${h.shares} @ ${usd(h.avgCost)}</small></span>
     <span class="pf-val"><b>${usd(h.marketValue)}</b><small class="${up ? "up" : "down"}">${signedUsd(h.unrealizedPL)} (${pct(h.unrealizedPLPct)})</small></span>
   </button>`;
@@ -396,7 +379,7 @@ function positionRow(p) {
   // Two sibling native buttons (select + close) rather than a div[role=button]
   // with a nested button: keyboard support comes for free and nesting buttons
   // is invalid HTML.
-  return `<div class="pf-row pos">
+  return `<div class="pf-row pos tile">
     <button class="pos-select" data-symbol="${p.symbol}">
       <span class="pf-id"><b>${p.symbol}<span class="dir-badge ${p.direction}">${p.direction.toUpperCase()}</span></b><small>${p.contracts} @ ${usd(p.entry)} · ${p.leverage}×</small></span>
       <span class="pf-val"><b class="${up ? "up" : "down"}">${signedUsd(p.unrealizedPL)}</b><small class="${up ? "up" : "down"}">${pct(p.unrealizedPLPct)}</small></span>
@@ -413,7 +396,7 @@ function renderPortfolio() {
   const holdings = portfolio.holdings || [];
   const positions = portfolio.positions || [];
   if (!holdings.length && !positions.length) {
-    body.innerHTML = `<div class="empty">No open positions. Place your first trade →</div>`;
+    body.innerHTML = `<div class="empty">No open positions. Place your first trade above.</div>`;
     return;
   }
 
@@ -421,10 +404,10 @@ function renderPortfolio() {
   const upRe = portfolio.realizedPL >= 0;
   let html = `
     <div class="pf-summary">
-      <div><span>Invested</span><b>${usd(portfolio.costBasis)}</b></div>
-      <div><span>Mkt Value</span><b>${usd(portfolio.marketValue)}</b></div>
-      <div><span>Unrealized</span><b class="${upUn ? "up" : "down"}">${signedUsd(portfolio.unrealizedPL)}</b></div>
-      <div><span>Realized</span><b class="${upRe ? "up" : "down"}">${signedUsd(portfolio.realizedPL)}</b></div>
+      <div class="tile"><span>Invested</span><b>${usd(portfolio.costBasis)}</b></div>
+      <div class="tile"><span>Mkt value</span><b>${usd(portfolio.marketValue)}</b></div>
+      <div class="tile"><span>Unrealized</span><b class="${upUn ? "up" : "down"}">${signedUsd(portfolio.unrealizedPL)}</b></div>
+      <div class="tile"><span>Realized</span><b class="${upRe ? "up" : "down"}">${signedUsd(portfolio.realizedPL)}</b></div>
     </div>`;
 
   if (holdings.length) {
@@ -445,9 +428,9 @@ function renderPortfolio() {
 
 function spotOrderRow(o) {
   return `<div class="order-row">
-    <span class="ord-side ${o.side}">${o.side.toUpperCase()}</span>
+    <span class="acme-badge ${o.side === "buy" ? "acme-badge--success" : "acme-badge--danger"}">${o.side.toUpperCase()}</span>
     <span class="ord-main"><b>${o.quantity} ${o.symbol}</b><small>@ ${usd(o.price)}</small></span>
-    <span class="ord-total"><b>${usd(o.total)}</b><small>${new Date(o.timestamp).toLocaleTimeString()}</small></span>
+    <span class="ord-total"><b>${usd(o.total)}</b><small>${new Date(o.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></span>
   </div>`;
 }
 
@@ -456,9 +439,9 @@ function futureOrderRow(o) {
   const amt = close ? signedUsd(o.realizedPL) : usd(o.margin);
   const amtClass = close ? (o.realizedPL >= 0 ? "up" : "down") : "";
   return `<div class="order-row">
-    <span class="ord-side ${o.direction === "long" ? "buy" : "sell"}">${close ? "CLOSE" : o.direction.toUpperCase()}</span>
+    <span class="acme-badge ${o.direction === "long" ? "acme-badge--success" : "acme-badge--danger"}">${close ? "CLOSE" : o.direction.toUpperCase()}</span>
     <span class="ord-main"><b>${o.contracts} ${o.symbol}</b><small>${close ? "closed @" : "@"} ${usd(o.price)}</small></span>
-    <span class="ord-total"><b class="${amtClass}">${amt}</b><small>${new Date(o.timestamp).toLocaleTimeString()}</small></span>
+    <span class="ord-total"><b class="${amtClass}">${amt}</b><small>${new Date(o.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></span>
   </div>`;
 }
 
@@ -484,16 +467,9 @@ function toast(msg, type = "info") {
   toastTimer = setTimeout(() => (el.className = "toast"), 3200);
 }
 
-function flashPulse() {
-  const dot = document.getElementById("pulse-dot");
-  dot.classList.remove("active");
-  void dot.offsetWidth;
-  dot.classList.add("active");
-}
-
 function setClock() {
   document.getElementById("market-clock").textContent =
-    "Updated " + new Date().toLocaleTimeString();
+    "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 // --- data loop ------------------------------------------------------------
@@ -525,7 +501,6 @@ async function refresh() {
     }
 
     setClock();
-    flashPulse();
   } catch (err) {
     console.error("refresh failed:", err);
   }
