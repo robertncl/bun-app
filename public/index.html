@@ -1,66 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BunTrade — Stock Trading Platform</title>
+  <title>BunTrade — Paper Trading</title>
+  <script>
+    try {
+      document.documentElement.setAttribute("data-theme", localStorage.getItem("buntrade-theme") || "dark");
+    } catch {}
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="acme.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <div class="logo">
-        <span class="logo-mark">▲</span>
-        <span class="logo-text">Bun<span class="logo-accent">Trade</span></span>
-        <span class="badge">PAPER</span>
-      </div>
-
-      <div class="header-portfolio" id="header-portfolio"></div>
-
-      <div class="header-status">
-        <span class="pulse-dot" id="pulse-dot"></span>
-        <span id="market-clock">—</span>
-      </div>
-    </header>
-
-    <main class="layout">
-      <section class="market">
-        <div class="section-head">
-          <h2>Markets</h2>
-          <input id="search" class="search" type="text" placeholder="Search symbol or name…" autocomplete="off" />
-        </div>
-        <div class="market-head">
-          <span>Symbol</span>
-          <span class="num">Last</span>
-          <span class="num">Chg %</span>
-          <span class="trend">Trend</span>
-        </div>
-        <div id="market-list" class="market-list"></div>
-      </section>
-
-      <aside class="panel-col">
-        <section id="trade-panel" class="card trade-card"></section>
-
-        <section class="card">
-          <div class="card-head">
-            <h3>Portfolio</h3>
-            <span id="pf-equity" class="card-head-value"></span>
-          </div>
-          <div id="portfolio-body" class="portfolio-body"></div>
-        </section>
-
-        <section class="card">
-          <div class="card-head"><h3>Order History</h3></div>
-          <div id="orders-body" class="orders-body"></div>
-        </section>
-      </aside>
-    </main>
-
-    <div id="toast" class="toast"></div>
+  <div class="app-shell">
+    <div id="app"></div>
   </div>
+  <div id="toast" class="toast"></div>
 
   <script src="app.js"></script>
 </body>
