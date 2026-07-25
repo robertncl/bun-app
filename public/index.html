@@ -1,14 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BunTrade — Paper Trading</title>
-  <script>
-    try {
-      document.documentElement.setAttribute("data-theme", localStorage.getItem("buntrade-theme") || "dark");
-    } catch {}
-  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -17,10 +12,49 @@
 </head>
 <body>
   <div class="app-shell">
-    <div id="app"></div>
-  </div>
-  <div id="toast" class="toast"></div>
+    <header class="bt-header">
+      <div class="bt-brand">
+        <span class="acme-wordmark"><span class="acme-wordmark__mark">B</span>BunTrade</span>
+        <span class="acme-badge">Paper</span>
+      </div>
+      <div class="bt-live">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span id="updated-label">—</span>
+      </div>
+    </header>
 
+    <div class="account-strip" id="account-strip"></div>
+
+    <section class="markets-head">
+      <h3 class="section-label">Markets</h3>
+      <input id="search" class="acme-input" type="text" placeholder="Search symbol or name…" autocomplete="off" />
+      <div class="acme-tabs asset-tabs" id="asset-tabs" role="tablist"></div>
+    </section>
+    <div id="market-list" class="market-list"></div>
+
+    <div class="card-wrap">
+      <article class="acme-card panel-card" id="trade-card"></article>
+    </div>
+
+    <div class="card-wrap">
+      <article class="acme-card panel-card">
+        <div class="card-head">
+          <h3 class="section-label" style="margin:0">Portfolio</h3>
+          <span id="pf-equity" class="card-head-value"></span>
+        </div>
+        <div id="portfolio-body"></div>
+      </article>
+    </div>
+
+    <div class="card-wrap card-wrap--last">
+      <article class="acme-card panel-card">
+        <h3 class="section-label">Order history</h3>
+        <div id="orders-body"></div>
+      </article>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
   <script src="app.js"></script>
 </body>
 </html>
