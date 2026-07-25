@@ -139,6 +139,9 @@
   --acme-color-info: var(--acme-blue-600);
   --acme-color-info-soft: var(--acme-blue-50);
   --acme-color-info-soft-text: var(--acme-blue-700);
+  /* Chart marks: Blueprint carries data, red marks the single takeaway. */
+  --acme-color-data: var(--acme-blue-600);
+  --acme-color-data-highlight: var(--acme-red-600);
 
   accent-color: var(--acme-color-primary);
 }
@@ -171,6 +174,8 @@
   --acme-color-info: var(--acme-blue-400);
   --acme-color-info-soft: color-mix(in oklab, var(--acme-blue-500) 16%, var(--acme-gray-900));
   --acme-color-info-soft-text: var(--acme-blue-300);
+  --acme-color-data: var(--acme-blue-400);
+  --acme-color-data-highlight: var(--acme-red-500);
   --acme-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --acme-shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
   --acme-shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6);
