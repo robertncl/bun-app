@@ -1,0 +1,388 @@
+/* ==========================================================================
+   ACME Corp Design Language — app subset of acme.css (v1.0.0)
+   Tokens + base + the components BunTrade uses (wordmark, buttons, forms,
+   card, badge, tabs). Source of truth: the "acme-design-system" package in
+   the Claude Design project; keep token values in sync with tokens/acme.css.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Tokens
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+
+  /* ACME Red — brand */
+  --acme-red-50: #FDF3F4;
+  --acme-red-100: #FAE3E6;
+  --acme-red-200: #F5C2C9;
+  --acme-red-300: #EC93A0;
+  --acme-red-400: #E05C70;
+  --acme-red-500: #D22F4C;
+  --acme-red-600: #C8102E;
+  --acme-red-700: #A60D26;
+  --acme-red-800: #8A0F23;
+  --acme-red-900: #741122;
+  --acme-red-950: #43060F;
+
+  /* Graphite — neutrals */
+  --acme-gray-0: #FFFFFF;
+  --acme-gray-50: #F8F9FA;
+  --acme-gray-100: #F1F3F5;
+  --acme-gray-200: #E4E7EB;
+  --acme-gray-300: #CDD2D9;
+  --acme-gray-400: #9AA1AC;
+  --acme-gray-500: #6C7480;
+  --acme-gray-600: #4E5560;
+  --acme-gray-700: #3A404A;
+  --acme-gray-800: #262B33;
+  --acme-gray-900: #16191F;
+  --acme-gray-950: #0C0E12;
+
+  /* Blueprint Blue — info & focus */
+  --acme-blue-50: #EFF4FE;
+  --acme-blue-100: #DEE9FD;
+  --acme-blue-200: #BCD2FA;
+  --acme-blue-300: #8FB0F5;
+  --acme-blue-400: #5F88EE;
+  --acme-blue-500: #3B82F6;
+  --acme-blue-600: #2563EB;
+  --acme-blue-700: #1D4ED8;
+
+  /* Go Green — success */
+  --acme-green-50: #F0FBF4;
+  --acme-green-300: #7FD99A;
+  --acme-green-400: #4CBB74;
+  --acme-green-500: #22C55E;
+  --acme-green-600: #15803D;
+  --acme-green-700: #116932;
+
+  /* Caution Amber — warning */
+  --acme-amber-50: #FEF8EB;
+  --acme-amber-300: #FCD34D;
+  --acme-amber-500: #F59E0B;
+  --acme-amber-700: #B45309;
+  --acme-amber-800: #92400E;
+
+  /* Typography */
+  --acme-font-sans: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --acme-font-display: "Archivo", "Inter", "Segoe UI", system-ui, sans-serif;
+  --acme-font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --acme-text-xs: 0.75rem;
+  --acme-text-sm: 0.875rem;
+  --acme-text-md: 1rem;
+  --acme-text-lg: 1.125rem;
+  --acme-text-xl: 1.25rem;
+  --acme-leading-tight: 1.2;
+  --acme-leading-normal: 1.5;
+
+  /* Spacing — 4px grid */
+  --acme-space-1: 0.25rem;
+  --acme-space-2: 0.5rem;
+  --acme-space-3: 0.75rem;
+  --acme-space-4: 1rem;
+  --acme-space-5: 1.25rem;
+  --acme-space-6: 1.5rem;
+  --acme-space-8: 2rem;
+
+  /* Shape — generous continuous curvature; controls are capsules */
+  --acme-radius-sm: 6px;
+  --acme-radius-md: 12px;
+  --acme-radius-lg: 20px;
+  --acme-radius-xl: 28px;
+  --acme-radius-full: 999px;
+
+  /* Elevation */
+  --acme-shadow-sm: 0 1px 2px rgb(12 14 18 / 0.08);
+  --acme-shadow-md: 0 4px 12px -2px rgb(12 14 18 / 0.12);
+  --acme-shadow-lg: 0 12px 32px -8px rgb(12 14 18 / 0.16);
+
+  /* Materials — ACME Glass */
+  --acme-glass-blur: 24px;
+  --acme-glass-saturate: 160%;
+  --acme-material-glass: color-mix(in srgb, var(--acme-gray-0) 62%, transparent);
+  --acme-material-glass-strong: color-mix(in srgb, var(--acme-gray-0) 85%, transparent);
+  --acme-glass-edge: inset 0 1px 0 rgb(255 255 255 / 0.65), inset 0 0 0 1px rgb(255 255 255 / 0.28);
+
+  /* Motion */
+  --acme-duration-fast: 100ms;
+  --acme-duration-base: 150ms;
+  --acme-duration-slow: 250ms;
+  --acme-ease-out: cubic-bezier(0.2, 0.8, 0.4, 1);
+  --acme-ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
+  --acme-ease-spring: cubic-bezier(0.32, 1.36, 0.5, 1);
+
+  /* Semantic aliases — light theme (default) */
+  --acme-color-canvas: var(--acme-gray-0);
+  --acme-color-surface: var(--acme-gray-50);
+  --acme-color-surface-raised: var(--acme-gray-0);
+  --acme-color-border: var(--acme-gray-200);
+  --acme-color-border-strong: var(--acme-gray-300);
+  --acme-color-text: var(--acme-gray-900);
+  --acme-color-text-muted: var(--acme-gray-600);
+  --acme-color-text-subtle: var(--acme-gray-500);
+  --acme-color-primary: var(--acme-red-600);
+  --acme-color-primary-hover: var(--acme-red-700);
+  --acme-color-primary-active: var(--acme-red-800);
+  --acme-color-on-primary: var(--acme-gray-0);
+  --acme-color-link: var(--acme-red-700);
+  --acme-color-focus: var(--acme-blue-500);
+  --acme-color-success: var(--acme-green-600);
+  --acme-color-success-soft: var(--acme-green-50);
+  --acme-color-success-soft-text: var(--acme-green-700);
+  --acme-color-warning: var(--acme-amber-700);
+  --acme-color-warning-soft: var(--acme-amber-50);
+  --acme-color-warning-soft-text: var(--acme-amber-800);
+  --acme-color-danger: var(--acme-red-700);
+  --acme-color-danger-emphasis: var(--acme-red-700);
+  --acme-color-danger-soft: var(--acme-red-50);
+  --acme-color-danger-soft-text: var(--acme-red-700);
+  --acme-color-info: var(--acme-blue-600);
+  --acme-color-info-soft: var(--acme-blue-50);
+  --acme-color-info-soft-text: var(--acme-blue-700);
+  /* Chart marks: Blueprint carries data, red marks the single takeaway. */
+  --acme-color-data: var(--acme-blue-600);
+  --acme-color-data-highlight: var(--acme-red-600);
+
+  accent-color: var(--acme-color-primary);
+}
+
+/* Semantic aliases — dark theme. Pin with data-theme="dark" on <html>. */
+:root[data-theme="dark"] {
+  --acme-color-canvas: var(--acme-gray-950);
+  --acme-color-surface: var(--acme-gray-900);
+  --acme-color-surface-raised: var(--acme-gray-800);
+  --acme-color-border: var(--acme-gray-700);
+  --acme-color-border-strong: var(--acme-gray-600);
+  --acme-color-text: var(--acme-gray-100);
+  --acme-color-text-muted: var(--acme-gray-400);
+  --acme-color-text-subtle: var(--acme-gray-400);
+  --acme-color-primary: var(--acme-red-500);
+  --acme-color-primary-hover: var(--acme-red-400);
+  --acme-color-primary-active: var(--acme-red-600);
+  --acme-color-link: var(--acme-red-300);
+  --acme-color-focus: var(--acme-blue-400);
+  --acme-color-success: var(--acme-green-400);
+  --acme-color-success-soft: color-mix(in oklab, var(--acme-green-500) 16%, var(--acme-gray-900));
+  --acme-color-success-soft-text: var(--acme-green-300);
+  --acme-color-warning: var(--acme-amber-500);
+  --acme-color-warning-soft: color-mix(in oklab, var(--acme-amber-500) 16%, var(--acme-gray-900));
+  --acme-color-warning-soft-text: var(--acme-amber-300);
+  --acme-color-danger: var(--acme-red-400);
+  --acme-color-danger-emphasis: var(--acme-red-500);
+  --acme-color-danger-soft: color-mix(in oklab, var(--acme-red-500) 18%, var(--acme-gray-900));
+  --acme-color-danger-soft-text: var(--acme-red-300);
+  --acme-color-info: var(--acme-blue-400);
+  --acme-color-info-soft: color-mix(in oklab, var(--acme-blue-500) 16%, var(--acme-gray-900));
+  --acme-color-info-soft-text: var(--acme-blue-300);
+  --acme-color-data: var(--acme-blue-400);
+  --acme-color-data-highlight: var(--acme-red-500);
+  --acme-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --acme-shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
+  --acme-shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6);
+  --acme-material-glass: color-mix(in srgb, var(--acme-gray-900) 70%, transparent);
+  --acme-material-glass-strong: color-mix(in srgb, var(--acme-gray-900) 90%, transparent);
+  --acme-glass-edge:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   2. Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--acme-font-sans);
+  font-size: var(--acme-text-md);
+  line-height: var(--acme-leading-normal);
+  color: var(--acme-color-text);
+  background: var(--acme-color-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--acme-color-link); }
+a:hover { color: var(--acme-color-primary-hover); }
+
+:is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--acme-color-focus);
+  outline-offset: 2px;
+  border-radius: var(--acme-radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Wordmark
+   -------------------------------------------------------------------------- */
+.acme-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: var(--acme-font-display);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acme-color-text);
+  text-decoration: none;
+}
+.acme-wordmark__mark {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.6em;
+  block-size: 1.6em;
+  border-radius: var(--acme-radius-sm);
+  background: var(--acme-red-600);
+  color: var(--acme-gray-0);
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. Buttons
+   -------------------------------------------------------------------------- */
+.acme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--acme-space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--acme-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--acme-radius-full);
+  font: 600 var(--acme-text-sm) / 1 var(--acme-font-sans);
+  color: var(--acme-color-text);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--acme-duration-base) var(--acme-ease-out),
+    border-color var(--acme-duration-base) var(--acme-ease-out),
+    color var(--acme-duration-base) var(--acme-ease-out),
+    scale var(--acme-duration-base) var(--acme-ease-spring);
+}
+.acme-btn:not(:disabled):active { scale: 0.97; }
+.acme-btn--primary {
+  background: var(--acme-color-primary);
+  color: var(--acme-color-on-primary);
+}
+.acme-btn--primary:hover { background: var(--acme-color-primary-hover); }
+.acme-btn--primary:active { background: var(--acme-color-primary-active); }
+.acme-btn--ghost { color: var(--acme-color-text-muted); }
+.acme-btn--ghost:hover {
+  background: var(--acme-material-glass);
+  color: var(--acme-color-text);
+}
+.acme-btn--danger {
+  background: var(--acme-color-danger-emphasis);
+  color: var(--acme-color-on-primary);
+}
+.acme-btn--danger:hover { filter: brightness(0.92); }
+.acme-btn--sm { min-height: 2rem; padding: 0 var(--acme-space-3); font-size: var(--acme-text-xs); }
+.acme-btn--lg { min-height: 3rem; padding: 0 var(--acme-space-5); font-size: var(--acme-text-md); }
+.acme-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --------------------------------------------------------------------------
+   5. Forms
+   -------------------------------------------------------------------------- */
+.acme-field { display: grid; gap: var(--acme-space-1); }
+.acme-label { font-size: var(--acme-text-sm); font-weight: 600; }
+.acme-input {
+  min-height: 2.5rem;
+  padding: 0 var(--acme-space-3);
+  border: 1px solid var(--acme-color-border-strong);
+  border-radius: var(--acme-radius-md);
+  font: 400 var(--acme-text-sm) / var(--acme-leading-normal) var(--acme-font-sans);
+  color: var(--acme-color-text);
+  background: var(--acme-color-surface-raised);
+  transition: border-color var(--acme-duration-base) var(--acme-ease-out);
+}
+.acme-input:hover { border-color: var(--acme-color-text-subtle); }
+.acme-input::placeholder { color: var(--acme-color-text-subtle); }
+.acme-input:disabled { background: var(--acme-color-surface); opacity: 0.6; cursor: not-allowed; }
+
+/* --------------------------------------------------------------------------
+   6. Card
+   -------------------------------------------------------------------------- */
+.acme-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--acme-radius-lg);
+  background: var(--acme-material-glass-strong);
+  -webkit-backdrop-filter: blur(var(--acme-glass-blur)) saturate(var(--acme-glass-saturate));
+  backdrop-filter: blur(var(--acme-glass-blur)) saturate(var(--acme-glass-saturate));
+  box-shadow: var(--acme-glass-edge), var(--acme-shadow-sm);
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   7. Badge
+   -------------------------------------------------------------------------- */
+.acme-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--acme-space-1);
+  padding: 0.125rem var(--acme-space-2);
+  border-radius: var(--acme-radius-full);
+  font: 600 var(--acme-text-xs) / var(--acme-leading-normal) var(--acme-font-sans);
+  background: var(--acme-color-surface);
+  color: var(--acme-color-text-muted);
+}
+.acme-badge--success { background: var(--acme-color-success-soft); color: var(--acme-color-success-soft-text); }
+.acme-badge--warning { background: var(--acme-color-warning-soft); color: var(--acme-color-warning-soft-text); }
+.acme-badge--danger  { background: var(--acme-color-danger-soft);  color: var(--acme-color-danger-soft-text); }
+.acme-badge--info    { background: var(--acme-color-info-soft);    color: var(--acme-color-info-soft-text); }
+
+/* --------------------------------------------------------------------------
+   8. Tabs — floating segmented control
+   -------------------------------------------------------------------------- */
+.acme-tabs {
+  display: inline-flex;
+  gap: var(--acme-space-1);
+  padding: var(--acme-space-1);
+  border-radius: var(--acme-radius-full);
+  background: var(--acme-material-glass);
+  -webkit-backdrop-filter: blur(var(--acme-glass-blur)) saturate(var(--acme-glass-saturate));
+  backdrop-filter: blur(var(--acme-glass-blur)) saturate(var(--acme-glass-saturate));
+  box-shadow: var(--acme-glass-edge), var(--acme-shadow-sm);
+}
+.acme-tab {
+  padding: var(--acme-space-2) var(--acme-space-4);
+  border: none;
+  border-radius: var(--acme-radius-full);
+  background: none;
+  font: 500 var(--acme-text-sm) / var(--acme-leading-normal) var(--acme-font-sans);
+  color: var(--acme-color-text-muted);
+  cursor: pointer;
+  transition: background-color var(--acme-duration-base) var(--acme-ease-out), color var(--acme-duration-base) var(--acme-ease-out);
+}
+.acme-tab:hover { color: var(--acme-color-text); }
+.acme-tab[aria-selected="true"] {
+  background: var(--acme-color-surface-raised);
+  color: var(--acme-color-text);
+  font-weight: 600;
+  box-shadow: var(--acme-shadow-sm);
+}
+
+/* --------------------------------------------------------------------------
+   9. Materials — opaque fallbacks
+   -------------------------------------------------------------------------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --acme-material-glass: var(--acme-color-surface-raised);
+    --acme-material-glass-strong: var(--acme-color-surface-raised);
+    --acme-glass-blur: 0px;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --acme-material-glass: var(--acme-color-surface-raised);
+    --acme-material-glass-strong: var(--acme-color-surface-raised);
+    --acme-glass-blur: 0px;
+  }
+}

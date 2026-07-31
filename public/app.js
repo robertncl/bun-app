@@ -1,14 +1,22 @@
-// BunTrade — front-end controller.
-// Polls the simulated market every couple of seconds and drives the dashboard:
-// market list, live price chart, trade ticket, portfolio and order history.
+// BunTrade — front-end controller for the "BunTrade Mobile" design: a
+// single scrolling page (header, account strip, markets list, trade card,
+// portfolio card, order history) rather than a multi-screen app. Polls the
+// simulated market every couple of seconds and re-renders.
 //
-// Two instrument families share the UI. Spot instruments (equities, crypto,
-// commodities) buy/sell outright; futures are leveraged derivatives that trade
-// long or short on margin. The trade ticket and portfolio adapt to whichever
-// kind of instrument is selected.
+// Color convention, taken directly from the design: positive/flat values
+// use the default text color; only negative values get --acme-color-danger.
+// There is no "success green" anywhere — Buy uses the `primary` button
+// variant and Sell uses `danger`, both red-family, differentiated by shade
+// rather than by a buy/sell color code. Sparklines are always the neutral
+// "data" blue; the trade card's chart is always the fixed "highlight" red,
+// regardless of trend — also per the design, not conditional on direction.
+//
+// The design itself only models plain buy/sell equities (a fictional
+// 12-symbol universe with its own local random walk). Asset-class tabs and
+// futures (long/short, margin) aren't part of it — they're kept here as an
+// extension, styled with the same components, so the real backend's
+// futures and commodities instruments stay reachable.
 
-const UP = "#26d07c";
-const DOWN = "#f6465d";
 const POLL_MS = 2000;
 
 const ASSET_TABS = [
@@ -19,15 +27,14 @@ const ASSET_TABS = [
   { id: "future", label: "Futures" },
 ];
 
-let stocks = {};         // symbol -> quote (spot and futures combined)
-let portfolio = null;    // latest portfolio view
-let orders = [];         // executed orders, newest first
-let selected = null;     // currently focused symbol
-let side = "buy";        // ticket side: buy/sell for spot, long/short for futures
+let stocks = {};          // symbol -> quote (spot and futures combined)
+let portfolio = null;
+let orders = [];
+let selected = null;
+let side = "buy";          // buy/sell for spot, long/short for futures
+let qty = 1;
 let searchTerm = "";
-let assetFilter = "all"; // active asset-class tab
-let renderedKey = "";    // signature of the rows currently in the DOM
-const prevPrice = {};    // symbol -> last seen price, for tick flashes
+let assetFilter = "all";
 
 // --- formatting helpers ---------------------------------------------------
 const money = (n) =>
@@ -35,6 +42,7 @@ const money = (n) =>
 const usd = (n) => "$" + money(n);
 const signedUsd = (n) => (n >= 0 ? "+" : "−") + "$" + money(Math.abs(n));
 const pct = (n) => (n >= 0 ? "+" : "") + Number(n).toFixed(2) + "%";
+const downClass = (n) => (n < 0 ? " down" : "");
 
 function compact(n) {
   if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
@@ -44,53 +52,70 @@ function compact(n) {
 }
 
 const isFuture = (s) => s && s.kind === "future";
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-// --- charts (dependency-free SVG) -----------------------------------------
-function sparkSVG(values, color) {
+// --- charts (dependency-free SVG polylines, no fill) -----------------------
+function points(values, w, h, padY) {
   if (!values || values.length < 2) return "";
-  const w = 72, h = 26;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = Math.min(...values), max = Math.max(...values);
   const range = max - min || 1;
-  const line = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * w;
-      const y = h - 2 - ((v - min) / range) * (h - 4);
-      return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
-    <path d="${line}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
-  </svg>`;
+  return values.map((v, i) => {
+    const x = (i / (values.length - 1)) * w;
+    const y = h - padY - ((v - min) / range) * (h - padY * 2);
+    return x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
 }
 
-function chartSVG(values, color) {
-  if (!values || values.length < 2) return "";
-  const w = 320, h = 110;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const pts = values.map((v, i) => [
-    (i / (values.length - 1)) * w,
-    h - 6 - ((v - min) / range) * (h - 12),
-  ]);
-  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const area = `${line} L${w},${h} L0,${h} Z`;
-  const gid = "grad-" + Math.random().toString(36).slice(2, 8);
-  return `<svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
-    <defs>
-      <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${color}" stop-opacity="0.30"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <path d="${area}" fill="url(#${gid})"/>
-    <path d="${line}" fill="none" stroke="${color}" stroke-width="2"
-          stroke-linejoin="round" stroke-linecap="round"/>
+const sparkSVG = (values) =>
+  `<svg class="m-spark" width="56" height="20" viewBox="0 0 56 20" aria-hidden="true">
+    <polyline points="${points(values, 56, 20, 3)}" fill="none" stroke="var(--acme-color-data)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
   </svg>`;
+
+const chartSVG = (values) =>
+  `<svg class="trade-chart" viewBox="0 0 336 110" aria-hidden="true">
+    <polyline points="${points(values, 336, 110, 6)}" fill="none" stroke="var(--acme-color-data-highlight)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+
+// --- toast ------------------------------------------------------------
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (el.className = "toast"), 2800);
 }
 
-// --- market list ----------------------------------------------------------
+// --- header / account strip -------------------------------------------
+function renderHeader() {
+  document.getElementById("updated-label").textContent =
+    "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  if (!portfolio) return;
+  const margin = portfolio.marginUsed > 0
+    ? `<div><div class="as-label">Margin used</div><div class="as-value num">${usd(portfolio.marginUsed)}</div></div>`
+    : "";
+  document.getElementById("account-strip").innerHTML = `
+    <div><div class="as-label">Equity</div><div class="as-value num">${usd(portfolio.equity)}</div></div>
+    <div><div class="as-label">Total P&amp;L</div><div class="as-value num${downClass(portfolio.totalPL)}">${signedUsd(portfolio.totalPL)} (${pct(portfolio.totalPLPct)})</div></div>
+    <div><div class="as-label">Buying power</div><div class="as-value num">${usd(portfolio.cash)}</div></div>
+    ${margin}`;
+}
+
+// --- asset tabs + market list -------------------------------------------
+function renderTabs() {
+  const el = document.getElementById("asset-tabs");
+  el.innerHTML = ASSET_TABS.map((t) =>
+    `<button class="acme-tab" role="tab" data-filter="${t.id}" aria-selected="${t.id === assetFilter}">${t.label}</button>`
+  ).join("");
+  el.querySelectorAll(".acme-tab").forEach((b) =>
+    b.addEventListener("click", () => {
+      assetFilter = b.dataset.filter;
+      renderTabs();
+      renderMarketList();
+    }));
+}
+
 function visibleStocks() {
   const term = searchTerm.trim().toUpperCase();
   return Object.values(stocks)
@@ -100,308 +125,177 @@ function visibleStocks() {
 }
 
 function rowHTML(s) {
-  const up = s.changePct >= 0;
   const tag = isFuture(s) ? `<span class="row-tag">${s.leverage}×</span>` : "";
-  return `<button class="row${s.symbol === selected ? " active" : ""}" data-symbol="${s.symbol}">
-    <span class="row-sym"><b>${s.symbol}${tag}</b><small>${s.name}</small></span>
-    <span class="row-last num">${money(s.price)}</span>
-    <span class="row-chg num ${up ? "up" : "down"}">${pct(s.changePct)}</span>
-    <span class="row-spark">${sparkSVG(s.spark, up ? UP : DOWN)}</span>
+  return `<button class="m-row${s.symbol === selected ? " active" : ""}" data-symbol="${s.symbol}">
+    <span class="m-id">
+      <span class="m-sym">${s.symbol}${tag}</span>
+      <span class="m-name">${esc(s.name)}</span>
+    </span>
+    <span class="m-quote">
+      <div class="m-price num">${usd(s.price)}</div>
+      <div class="m-chg num${downClass(s.changePct)}">${pct(s.changePct)}</div>
+    </span>
+    ${sparkSVG(s.spark)}
   </button>`;
-}
-
-function updateRow(list, s) {
-  const row = list.querySelector(`.row[data-symbol="${s.symbol}"]`);
-  if (!row) return;
-  const up = s.changePct >= 0;
-
-  const last = row.querySelector(".row-last");
-  const prev = prevPrice[s.symbol];
-  if (prev !== undefined && s.price !== prev) {
-    last.classList.remove("tick-up", "tick-down");
-    void last.offsetWidth; // restart the flash animation
-    last.classList.add(s.price > prev ? "tick-up" : "tick-down");
-  }
-  last.textContent = money(s.price);
-
-  const chg = row.querySelector(".row-chg");
-  chg.textContent = pct(s.changePct);
-  chg.className = `row-chg num ${up ? "up" : "down"}`;
-
-  row.querySelector(".row-spark").innerHTML = sparkSVG(s.spark, up ? UP : DOWN);
-  row.classList.toggle("active", s.symbol === selected);
-  prevPrice[s.symbol] = s.price;
 }
 
 function renderMarketList() {
   const list = document.getElementById("market-list");
   const items = visibleStocks();
-  const key = items.map((s) => s.symbol).join(",");
-
-  if (key !== renderedKey) {
-    list.innerHTML = items.map(rowHTML).join("") || `<div class="empty">No matches.</div>`;
-    list.querySelectorAll(".row").forEach((r) =>
-      r.addEventListener("click", () => selectStock(r.dataset.symbol)));
-    items.forEach((s) => (prevPrice[s.symbol] = s.price));
-    renderedKey = key;
-  } else {
-    items.forEach((s) => updateRow(list, s));
-  }
+  list.innerHTML = items.map(rowHTML).join("") ||
+    `<div class="empty-note empty-note--list">No matches.</div>`;
+  list.querySelectorAll(".m-row").forEach((r) =>
+    r.addEventListener("click", () => selectStock(r.dataset.symbol)));
 }
 
-function renderTabs() {
-  const el = document.getElementById("asset-tabs");
-  el.innerHTML = ASSET_TABS.map(
-    (t) => `<button class="asset-tab${t.id === assetFilter ? " active" : ""}" data-filter="${t.id}" aria-pressed="${t.id === assetFilter}">${t.label}</button>`,
+// --- trade card ------------------------------------------------------
+function renderTradeCard() {
+  const s = stocks[selected];
+  const card = document.getElementById("trade-card");
+  if (!s) { card.innerHTML = `<div class="empty-note">Loading…</div>`; return; }
+
+  if (side !== "buy" && side !== "sell" && !isFuture(s)) side = "buy";
+  if (side !== "long" && side !== "short" && isFuture(s)) side = "long";
+
+  const stats = isFuture(s)
+    ? [["Notional", "$" + compact(s.notional)], ["Leverage", s.leverage + "×"], ["Margin", "$" + compact(s.marginPerContract)], ["Expiry", s.daysToExpiry + "d"]]
+    : [["Open", usd(s.open)], ["High", usd(s.dayHigh)], ["Low", usd(s.dayLow)], ["Volume", compact(s.volume)]];
+  const statsHTML = stats.map(([label, value]) =>
+    `<div class="tile"><div class="tile-label">${label}</div><div class="tile-value num">${value}</div></div>`
   ).join("");
-  el.querySelectorAll(".asset-tab").forEach((b) =>
-    b.addEventListener("click", () => {
-      assetFilter = b.dataset.filter;
-      el.querySelectorAll(".asset-tab").forEach((x) => {
-        const on = x === b;
-        x.classList.toggle("active", on);
-        x.setAttribute("aria-pressed", String(on));
-      });
-      renderMarketList();
-    }));
-}
 
-// --- trade panel ----------------------------------------------------------
-function buildTradeShell() {
-  document.getElementById("trade-panel").innerHTML = `
-    <div class="trade-head" id="trade-head"></div>
-    <div class="chart-wrap" id="trade-chart"></div>
-    <div class="stat-row" id="trade-stats"></div>
-    <div class="ticket" id="trade-ticket"></div>`;
-}
+  const buyLabel = isFuture(s) ? "Long" : "Buy";
+  const sellLabel = isFuture(s) ? "Short" : "Sell";
+  const buySide = isFuture(s) ? "long" : "buy";
+  const sellSide = isFuture(s) ? "short" : "sell";
+  const isBuy = side === buySide;
 
-function renderQuote() {
-  const s = stocks[selected];
-  if (!s) return;
-  const up = s.changePct >= 0;
-  const color = up ? UP : DOWN;
+  const unit = isFuture(s) ? "Contracts" : "Quantity";
+  const estimate = isFuture(s) ? qty * s.marginPerContract : qty * s.price;
+  const estCaption = isFuture(s) ? "Margin required" : (isBuy ? "Est. cost" : "Est. proceeds");
 
-  document.getElementById("trade-head").innerHTML = `
-    <div class="th-id">
-      <div class="th-sym">${s.symbol} <span class="th-name">${s.name}</span></div>
-      <div class="th-sector">${s.sector}</div>
+  const held = isFuture(s)
+    ? portfolio?.positions?.find((p) => p.symbol === selected)
+    : portfolio?.holdings?.find((h) => h.symbol === selected);
+  const heldNote = isFuture(s)
+    ? (held ? `Holding ${held.direction} ${held.contracts} @ ${usd(held.entry)}` : null)
+    : (held ? `Holding ${held.shares} @ ${usd(held.avgCost)} avg` : null);
+
+  card.innerHTML = `
+    <div class="th-row">
+      <div>
+        <div class="th-sym"><span class="mono">${s.symbol}</span> <span class="th-name">${esc(s.name)}</span></div>
+        <div class="th-sector">${esc(s.sector)}</div>
+      </div>
+      <div class="th-price">
+        <div class="th-price-val num">${usd(s.price)}</div>
+        <div class="th-chg num${downClass(s.changePct)}">${s.changePct >= 0 ? "▲" : "▼"} ${money(Math.abs(s.change))} (${pct(s.changePct)})</div>
+      </div>
     </div>
-    <div class="th-price">
-      <div class="big-price">${usd(s.price)}</div>
-      <div class="chg ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${money(Math.abs(s.change))} (${pct(s.changePct)})</div>
-    </div>`;
 
-  document.getElementById("trade-chart").innerHTML = chartSVG(s.spark, color);
+    ${chartSVG(s.spark)}
 
-  document.getElementById("trade-stats").innerHTML = isFuture(s)
-    ? `
-      <div><span>Notional</span><b>$${compact(s.notional)}</b></div>
-      <div><span>Leverage</span><b>${s.leverage}×</b></div>
-      <div><span>Margin</span><b>$${compact(s.marginPerContract)}</b></div>
-      <div><span>Expiry</span><b>${s.daysToExpiry}d</b></div>`
-    : `
-      <div><span>Open</span><b>${money(s.open)}</b></div>
-      <div><span>High</span><b>${money(s.dayHigh)}</b></div>
-      <div><span>Low</span><b>${money(s.dayLow)}</b></div>
-      <div><span>Volume</span><b>${compact(s.volume)}</b></div>`;
-}
+    <div class="stat-grid">${statsHTML}</div>
 
-function renderTicket() {
-  const s = stocks[selected];
-  if (!s) return;
-  if (isFuture(s)) renderFutureTicket(s);
-  else renderSpotTicket(s);
-}
-
-function renderSpotTicket(s) {
-  if (side !== "buy" && side !== "sell") side = "buy";
-  const held = portfolio?.holdings?.find((h) => h.symbol === selected);
-
-  document.getElementById("trade-ticket").innerHTML = `
-    <div class="side-toggle">
-      <button class="side-btn buy${side === "buy" ? " active" : ""}" data-side="buy">Buy</button>
-      <button class="side-btn sell${side === "sell" ? " active" : ""}" data-side="sell">Sell</button>
+    <div class="acme-tabs full-width" role="tablist">
+      <button class="acme-tab" data-side="${buySide}" aria-selected="${isBuy}">${buyLabel}</button>
+      <button class="acme-tab" data-side="${sellSide}" aria-selected="${!isBuy}">${sellLabel}</button>
     </div>
-    <label class="field">
-      <span>Quantity</span>
-      <input id="qty" type="number" min="1" step="1" value="1" inputmode="numeric" />
+
+    <label class="acme-field">
+      <span class="acme-label">${unit}</span>
+      <input id="qty" class="acme-input" type="number" min="1" step="1" value="${qty}" inputmode="numeric" />
     </label>
-    <div class="ticket-meta">
-      <span>Est. ${side === "buy" ? "cost" : "proceeds"}</span>
-      <span id="est-total">${usd(s.price)}</span>
+
+    <div class="est-row">
+      <span class="est-caption">${estCaption}</span>
+      <span class="est-value num">${usd(estimate)}</span>
     </div>
-    ${held ? `<div class="held-note">Holding ${held.shares} @ ${usd(held.avgCost)} avg</div>` : ""}
-    <button id="place-order" class="place-btn ${side}">${side === "buy" ? "Buy" : "Sell"} ${s.symbol}</button>`;
 
-  wireTicket();
-}
+    ${heldNote ? `<div class="held-note">${esc(heldNote)}</div>` : ""}
 
-function renderFutureTicket(s) {
-  if (side !== "long" && side !== "short") side = "long";
-  const pos = portfolio?.positions?.find((p) => p.symbol === selected);
+    <button id="place-order" class="acme-btn place-btn ${isBuy ? "acme-btn--primary" : "acme-btn--danger"}">${isBuy ? buyLabel : sellLabel} ${s.symbol}</button>`;
 
-  document.getElementById("trade-ticket").innerHTML = `
-    <div class="side-toggle">
-      <button class="side-btn long${side === "long" ? " active" : ""}" data-side="long">Long</button>
-      <button class="side-btn short${side === "short" ? " active" : ""}" data-side="short">Short</button>
-    </div>
-    <label class="field">
-      <span>Contracts</span>
-      <input id="qty" type="number" min="1" step="1" value="1" inputmode="numeric" />
-    </label>
-    <div class="deriv-meta"><span>Margin required</span><b id="est-total">${usd(s.marginPerContract)}</b></div>
-    <div class="deriv-meta"><span>Notional</span><b id="est-notional">${usd(s.notional)}</b></div>
-    <div class="deriv-meta"><span>Leverage</span><b>${s.leverage}× · expires ${s.daysToExpiry}d</b></div>
-    ${pos ? positionNote(pos) : ""}
-    <button id="place-order" class="place-btn ${side}">${side === "long" ? "Long" : "Short"} ${s.symbol}</button>`;
-
-  wireTicket();
-}
-
-function positionNote(pos) {
-  const up = pos.unrealizedPL >= 0;
-  return `<div class="held-note pos-note">
-    <span><span class="dir-badge ${pos.direction}">${pos.direction.toUpperCase()}</span> ${pos.contracts} @ ${usd(pos.entry)}
-      · <b class="${up ? "up" : "down"}">${signedUsd(pos.unrealizedPL)}</b></span>
-    <button class="close-btn" id="close-pos">Close</button>
-  </div>`;
-}
-
-function wireTicket() {
-  document.querySelectorAll("#trade-ticket .side-btn").forEach((b) =>
-    b.addEventListener("click", () => {
-      side = b.dataset.side;
-      renderTicket();
-    }));
-  document.getElementById("qty")?.addEventListener("input", refreshEst);
-  document.getElementById("place-order")?.addEventListener("click", submitOrder);
-  document.getElementById("close-pos")?.addEventListener("click", () => closePosition(selected));
-}
-
-function refreshEst() {
-  const s = stocks[selected];
-  const input = document.getElementById("qty");
-  const total = document.getElementById("est-total");
-  if (!s || !input || !total) return;
-  const n = Math.max(0, parseInt(input.value, 10) || 0);
-  if (isFuture(s)) {
-    total.textContent = usd(n * s.marginPerContract);
-    const notional = document.getElementById("est-notional");
-    if (notional) notional.textContent = usd(n * s.notional);
-  } else {
-    total.textContent = usd(n * s.price);
-  }
+  card.querySelectorAll("[data-side]").forEach((b) =>
+    b.addEventListener("click", () => { side = b.dataset.side; renderTradeCard(); }));
+  card.querySelector("#qty").addEventListener("input", (e) => {
+    qty = Math.max(0, parseInt(e.target.value, 10) || 0);
+    renderTradeCard();
+  });
+  card.querySelector("#place-order").addEventListener("click", submitOrder);
 }
 
 function selectStock(symbol) {
   if (!stocks[symbol]) return;
-  if (selected !== symbol) side = isFuture(stocks[symbol]) ? "long" : "buy";
+  if (selected !== symbol) { side = isFuture(stocks[symbol]) ? "long" : "buy"; qty = 1; }
   selected = symbol;
-  renderQuote();
-  renderTicket();
-  document.querySelectorAll("#market-list .row").forEach((r) =>
-    r.classList.toggle("active", r.dataset.symbol === symbol));
+  renderMarketList();
+  renderTradeCard();
 }
 
 async function submitOrder() {
   const s = stocks[selected];
-  const input = document.getElementById("qty");
-  const quantity = parseInt(input?.value, 10) || 0;
-  if (quantity <= 0) {
-    toast("Enter a valid quantity", "error");
-    return;
-  }
+  if (!s || qty <= 0) { toast("Enter a valid quantity"); return; }
   const btn = document.getElementById("place-order");
   if (btn) btn.disabled = true;
 
   try {
     const endpoint = isFuture(s) ? "/api/futures/orders" : "/api/orders";
     const body = isFuture(s)
-      ? { symbol: selected, direction: side, contracts: quantity }
-      : { symbol: selected, side, quantity };
-
+      ? { symbol: selected, direction: side, contracts: qty }
+      : { symbol: selected, side, quantity: qty };
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    if (!res.ok) {
-      toast(data.error || "Order rejected", "error");
-      return;
-    }
+    if (!res.ok) { toast(data.error || "Order rejected"); return; }
     portfolio = data.portfolio;
     const o = data.order;
-    if (isFuture(s)) {
-      toast(`${side === "long" ? "Long" : "Short"} ${o.contracts} ${o.symbol} @ ${usd(o.price)}`, "success");
-    } else {
-      toast(`${o.side === "buy" ? "Bought" : "Sold"} ${o.quantity} ${o.symbol} @ ${usd(o.price)}`, "success");
-    }
+    toast(isFuture(s)
+      ? `${side === "long" ? "Long" : "Short"} ${o.contracts} ${o.symbol} @ ${usd(o.price)}`
+      : `${o.side === "buy" ? "Bought" : "Sold"} ${o.quantity} ${o.symbol} @ ${usd(o.price)}`);
     await refresh();
-    renderTicket();
   } catch {
-    toast("Network error — order not placed", "error");
+    toast("Network error — order not placed");
   } finally {
     if (btn) btn.disabled = false;
   }
 }
 
-async function closePosition(symbol, contracts) {
+async function closePosition(symbol) {
   try {
-    const body = contracts ? { symbol, contracts } : { symbol };
     const res = await fetch("/api/futures/close", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ symbol }),
     });
     const data = await res.json();
-    if (!res.ok) {
-      toast(data.error || "Close failed", "error");
-      return;
-    }
+    if (!res.ok) { toast(data.error || "Close failed"); return; }
     portfolio = data.portfolio;
-    const pnl = data.order.realizedPL;
-    toast(`Closed ${data.order.contracts} ${symbol} · ${signedUsd(pnl)}`, pnl >= 0 ? "success" : "error");
+    toast(`Closed ${data.order.contracts} ${symbol} · ${signedUsd(data.order.realizedPL)}`);
     await refresh();
-    if (selected === symbol) renderTicket();
   } catch {
-    toast("Network error — position not closed", "error");
+    toast("Network error — position not closed");
   }
 }
 
-// --- header, portfolio, orders --------------------------------------------
-function renderHeader() {
-  if (!portfolio) return;
-  const up = portfolio.totalPL >= 0;
-  const margin = portfolio.marginUsed > 0
-    ? `<div class="hp"><span>Margin Used</span><b>${usd(portfolio.marginUsed)}</b></div>`
-    : "";
-  document.getElementById("header-portfolio").innerHTML = `
-    <div class="hp"><span>Equity</span><b>${usd(portfolio.equity)}</b></div>
-    <div class="hp"><span>Total P&L</span><b class="${up ? "up" : "down"}">${signedUsd(portfolio.totalPL)} (${pct(portfolio.totalPLPct)})</b></div>
-    <div class="hp"><span>Buying Power</span><b>${usd(portfolio.cash)}</b></div>
-    ${margin}`;
-}
-
+// --- portfolio ------------------------------------------------------
 function holdingRow(h) {
-  const up = h.unrealizedPL >= 0;
-  return `<button class="pf-row" data-kind="spot" data-symbol="${h.symbol}">
-    <span class="pf-id"><b>${h.symbol}</b><small>${h.shares} @ ${usd(h.avgCost)}</small></span>
-    <span class="pf-val"><b>${usd(h.marketValue)}</b><small class="${up ? "up" : "down"}">${signedUsd(h.unrealizedPL)} (${pct(h.unrealizedPLPct)})</small></span>
+  return `<button class="pf-row" data-symbol="${h.symbol}">
+    <span><span class="pf-sym">${h.symbol}</span><span class="pf-sub" style="display:block">${h.shares} @ ${usd(h.avgCost)}</span></span>
+    <span class="pf-val"><span class="pf-value num" style="display:block">${usd(h.marketValue)}</span><span class="pf-pl num${downClass(h.unrealizedPL)}" style="display:block">${signedUsd(h.unrealizedPL)} (${pct(h.unrealizedPLPct)})</span></span>
   </button>`;
 }
 
 function positionRow(p) {
-  const up = p.unrealizedPL >= 0;
-  // Two sibling native buttons (select + close) rather than a div[role=button]
-  // with a nested button: keyboard support comes for free and nesting buttons
-  // is invalid HTML.
-  return `<div class="pf-row pos">
+  return `<div class="pos-row">
     <button class="pos-select" data-symbol="${p.symbol}">
-      <span class="pf-id"><b>${p.symbol}<span class="dir-badge ${p.direction}">${p.direction.toUpperCase()}</span></b><small>${p.contracts} @ ${usd(p.entry)} · ${p.leverage}×</small></span>
-      <span class="pf-val"><b class="${up ? "up" : "down"}">${signedUsd(p.unrealizedPL)}</b><small class="${up ? "up" : "down"}">${pct(p.unrealizedPLPct)}</small></span>
+      <span><span class="pf-sym">${p.symbol}<span class="dir-badge">${p.direction.toUpperCase()}</span></span><span class="pf-sub" style="display:block">${p.contracts} @ ${usd(p.entry)} · ${p.leverage}×</span></span>
+      <span class="pf-val"><span class="pf-value num${downClass(p.unrealizedPL)}" style="display:block">${signedUsd(p.unrealizedPL)}</span><span class="pf-pl num${downClass(p.unrealizedPL)}" style="display:block">${pct(p.unrealizedPLPct)}</span></span>
     </button>
-    <button class="close-btn" data-symbol="${p.symbol}" aria-label="Close ${p.symbol} position">✕</button>
+    <button class="pos-close" data-symbol="${p.symbol}">Close</button>
   </div>`;
 }
 
@@ -413,90 +307,61 @@ function renderPortfolio() {
   const holdings = portfolio.holdings || [];
   const positions = portfolio.positions || [];
   if (!holdings.length && !positions.length) {
-    body.innerHTML = `<div class="empty">No open positions. Place your first trade →</div>`;
+    body.innerHTML = `<div class="empty-note">No open positions. Place your first trade above.</div>`;
     return;
   }
 
-  const upUn = portfolio.unrealizedPL >= 0;
-  const upRe = portfolio.realizedPL >= 0;
   let html = `
-    <div class="pf-summary">
-      <div><span>Invested</span><b>${usd(portfolio.costBasis)}</b></div>
-      <div><span>Mkt Value</span><b>${usd(portfolio.marketValue)}</b></div>
-      <div><span>Unrealized</span><b class="${upUn ? "up" : "down"}">${signedUsd(portfolio.unrealizedPL)}</b></div>
-      <div><span>Realized</span><b class="${upRe ? "up" : "down"}">${signedUsd(portfolio.realizedPL)}</b></div>
+    <div class="pf-stat-grid">
+      <div class="pf-stat-tile"><div class="tile-label">Invested</div><div class="tile-value num">${usd(portfolio.costBasis)}</div></div>
+      <div class="pf-stat-tile"><div class="tile-label">Mkt value</div><div class="tile-value num">${usd(portfolio.marketValue)}</div></div>
+      <div class="pf-stat-tile"><div class="tile-label">Unrealized</div><div class="tile-value num${downClass(portfolio.unrealizedPL)}">${signedUsd(portfolio.unrealizedPL)}</div></div>
+      <div class="pf-stat-tile"><div class="tile-label">Realized</div><div class="tile-value num${downClass(portfolio.realizedPL)}">${signedUsd(portfolio.realizedPL)}</div></div>
     </div>`;
 
-  if (holdings.length) {
-    html += `<div class="pf-group-label">Positions</div>
-      <div class="pf-list">${holdings.map(holdingRow).join("")}</div>`;
-  }
-  if (positions.length) {
-    html += `<div class="pf-group-label">Derivatives · margin ${usd(portfolio.marginUsed)}</div>
-      <div class="pf-list">${positions.map(positionRow).join("")}</div>`;
-  }
+  if (holdings.length) html += `<div class="pf-list">${holdings.map(holdingRow).join("")}</div>`;
+  if (positions.length) html += `
+    <div class="pf-group-label">Derivatives · margin ${usd(portfolio.marginUsed)}</div>
+    <div class="pf-list">${positions.map(positionRow).join("")}</div>`;
   body.innerHTML = html;
 
-  body.querySelectorAll('.pf-row[data-kind="spot"], .pos-select').forEach((r) =>
+  body.querySelectorAll(".pf-row, .pos-select").forEach((r) =>
     r.addEventListener("click", () => selectStock(r.dataset.symbol)));
-  body.querySelectorAll(".close-btn[data-symbol]").forEach((b) =>
+  body.querySelectorAll(".pos-close").forEach((b) =>
     b.addEventListener("click", () => closePosition(b.dataset.symbol)));
 }
 
+// --- order history ------------------------------------------------------
 function spotOrderRow(o) {
+  const arrow = o.side === "buy" ? "▲" : "▼";
   return `<div class="order-row">
-    <span class="ord-side ${o.side}">${o.side.toUpperCase()}</span>
-    <span class="ord-main"><b>${o.quantity} ${o.symbol}</b><small>@ ${usd(o.price)}</small></span>
-    <span class="ord-total"><b>${usd(o.total)}</b><small>${new Date(o.timestamp).toLocaleTimeString()}</small></span>
+    <span class="acme-badge">${arrow} ${o.side.toUpperCase()}</span>
+    <span class="ord-main"><div class="ord-main-line">${o.quantity} ${o.symbol}</div><div class="ord-sub">@ ${usd(o.price)}</div></span>
+    <span class="ord-total"><div class="ord-total-value num">${usd(o.total)}</div><div class="ord-time">${new Date(o.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div></span>
   </div>`;
 }
 
 function futureOrderRow(o) {
   const close = o.action === "close";
+  const arrow = close ? "■" : (o.direction === "long" ? "▲" : "▼");
+  const label = close ? "CLOSE" : o.direction.toUpperCase();
   const amt = close ? signedUsd(o.realizedPL) : usd(o.margin);
-  const amtClass = close ? (o.realizedPL >= 0 ? "up" : "down") : "";
   return `<div class="order-row">
-    <span class="ord-side ${o.direction === "long" ? "buy" : "sell"}">${close ? "CLOSE" : o.direction.toUpperCase()}</span>
-    <span class="ord-main"><b>${o.contracts} ${o.symbol}</b><small>${close ? "closed @" : "@"} ${usd(o.price)}</small></span>
-    <span class="ord-total"><b class="${amtClass}">${amt}</b><small>${new Date(o.timestamp).toLocaleTimeString()}</small></span>
+    <span class="acme-badge">${arrow} ${label}</span>
+    <span class="ord-main"><div class="ord-main-line">${o.contracts} ${o.symbol}</div><div class="ord-sub">${close ? "closed @" : "@"} ${usd(o.price)}</div></span>
+    <span class="ord-total"><div class="ord-total-value num">${amt}</div><div class="ord-time">${new Date(o.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div></span>
   </div>`;
 }
 
 function renderOrders() {
   const body = document.getElementById("orders-body");
-  if (!orders.length) {
-    body.innerHTML = `<div class="empty">No orders yet.</div>`;
-    return;
-  }
-  body.innerHTML = orders
-    .slice(0, 25)
+  if (!orders.length) { body.innerHTML = `<div class="empty-note">No orders yet.</div>`; return; }
+  body.innerHTML = `<div class="orders-list">${orders.slice(0, 25)
     .map((o) => (o.kind === "future" ? futureOrderRow(o) : spotOrderRow(o)))
-    .join("");
+    .join("")}</div>`;
 }
 
-// --- misc UI --------------------------------------------------------------
-let toastTimer;
-function toast(msg, type = "info") {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.className = "toast"), 3200);
-}
-
-function flashPulse() {
-  const dot = document.getElementById("pulse-dot");
-  dot.classList.remove("active");
-  void dot.offsetWidth;
-  dot.classList.add("active");
-}
-
-function setClock() {
-  document.getElementById("market-clock").textContent =
-    "Updated " + new Date().toLocaleTimeString();
-}
-
-// --- data loop ------------------------------------------------------------
+// --- data loop ------------------------------------------------------
 async function refresh() {
   try {
     const [s, f, p, o] = await Promise.all([
@@ -512,27 +377,19 @@ async function refresh() {
     portfolio = p;
     orders = o;
 
-    renderMarketList();
     renderHeader();
+    renderMarketList();
     renderPortfolio();
     renderOrders();
 
-    if (!selected) {
-      selectStock(s[0]?.symbol);
-    } else if (stocks[selected]) {
-      renderQuote();
-      refreshEst();
-    }
-
-    setClock();
-    flashPulse();
+    if (!selected) selectStock(s[0]?.symbol);
+    else renderTradeCard();
   } catch (err) {
     console.error("refresh failed:", err);
   }
 }
 
 function init() {
-  buildTradeShell();
   renderTabs();
   document.getElementById("search").addEventListener("input", (e) => {
     searchTerm = e.target.value;
