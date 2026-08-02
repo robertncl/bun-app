@@ -318,10 +318,68 @@ describe('Derivatives — futures', () => {
     expect(res.status).toBe(400);
   });
 
+  test('closing an unknown futures contract is rejected', async () => {
+    const res = await closeFuture({ symbol: 'NOPE' });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/unknown futures contract/i);
+  });
+
+  test('closing rejects non-positive and fractional contract counts', async () => {
+    await postFuture({ symbol: 'SI', direction: 'long', contracts: 2 });
+    expect((await closeFuture({ symbol: 'SI', contracts: 0 })).status).toBe(400);
+    expect((await closeFuture({ symbol: 'SI', contracts: -1 })).status).toBe(400);
+    expect((await closeFuture({ symbol: 'SI', contracts: 1.5 })).status).toBe(400);
+  });
+
+  test('an opposite-direction order larger than the position flips it', async () => {
+    await postFuture({ symbol: 'HG', direction: 'long', contracts: 2 });
+    const res = await postFuture({ symbol: 'HG', direction: 'short', contracts: 5 });
+    expect(res.status).toBe(200);
+    const { portfolio } = await res.json();
+    const pos = portfolio.positions.find((p) => p.symbol === 'HG');
+    expect(pos).toBeDefined();
+    expect(pos.direction).toBe('short');
+    expect(pos.contracts).toBe(3);
+  });
+
   test('portfolio exposes derivative summary fields', async () => {
     const data = await (await api('/api/portfolio')).json();
     expect(Array.isArray(data.positions)).toBe(true);
     expect(typeof data.marginUsed).toBe('number');
     expect(typeof data.derivativesPL).toBe('number');
   });
+
+  test('rejects an invalid JSON body when opening a futures order', async () => {
+    const res = await api('/api/futures/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json',
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/invalid json/i);
+  });
+
+  test('rejects an invalid JSON body when closing a futures order', async () => {
+    const res = await api('/api/futures/close', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json',
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/invalid json/i);
+  });
+});
+
+describe('Market ticker', () => {
+  test('prices tick upward in volume and refresh updatedAt over time', async () => {
+    const before = await (await api('/api/stocks/AAPL')).json();
+
+    // The background ticker runs every 2s (TICK_MS); wait for at least one tick.
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+
+    const after = await (await api('/api/stocks/AAPL')).json();
+    expect(after.volume).toBeGreaterThan(before.volume);
+    expect(after.updatedAt).toBeGreaterThan(before.updatedAt);
+    expect(after.history.length).toBeLessThanOrEqual(60);
+  }, 4000);
 });
