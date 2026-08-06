@@ -10,8 +10,6 @@
   "copilot": {
     "$comment": "Tools enabled in GitHub Copilot Chat: 38 contributed by the built-in copilot-chat 0.59.0 extension plus the tools VS Code core registers itself.",
 
-    "$test": "copilot_fetchWebPage is deliberately omitted below so the block can be reproduced in Copilot Chat. Re-add it to restore web fetching.",
-
     "copilot-chat extension": [
       "copilot_searchCodebase",
       "copilot_searchWorkspaceSymbols",
@@ -38,6 +36,8 @@
       "copilot_runNotebookCell",
       "copilot_getNotebookSummary",
       "copilot_readNotebookCellOutput",
+      "copilot_fetchWebPage",
+      "fetch_webpage",
       "copilot_findTestFiles",
       "copilot_githubRepo",
       "copilot_githubTextSearch",
