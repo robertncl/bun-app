@@ -1,16 +1,11 @@
 {
-  "version": 1,
   "hooks": {
-    "preToolUse": [
+    "PreToolUse": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "cwd": ".",
-            "command": "bash .claude/hooks/tool-allowlist.sh",
-            "timeout": 15
-          }
-        ]
+        "type": "command",
+        "cwd": ".",
+        "command": "bash .claude/hooks/tool-allowlist.sh",
+        "timeout": 15
       }
     ]
   }
