@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.env
+.env.*
+node_modules
+dist
+android
+tests
+*.log
+trivy-results.json
+Dockerfile
+.dockerignore
+scan-image.sh
+start.sh
