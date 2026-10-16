@@ -10,6 +10,38 @@ const MIME_TYPES = {
   ".json": "application/json",
 };
 
+// Resolved once so static serving doesn't depend on the process's cwd, and so
+// the containment check below compares absolute paths.
+const PUBLIC_DIR = path.resolve(import.meta.dir, "..", "public");
+
+const MAX_BODY_BYTES = 64 * 1024;
+
+// Applied to every response. The UI sets inline style attributes from JS and
+// pulls fonts from Google, hence 'unsafe-inline' for styles and the two font
+// origins; scripts are restricted to same-origin files.
+const SECURITY_HEADERS = {
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; "),
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
+  "Cross-Origin-Opener-Policy": "same-origin",
+};
+
+function withSecurityHeaders(res) {
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.headers.set(k, v);
+  return res;
+}
+
 // ---------------------------------------------------------------------------
 // Market definition
 //
@@ -497,108 +529,125 @@ function closeFuture(req) {
 // ---------------------------------------------------------------------------
 // HTTP server
 // ---------------------------------------------------------------------------
+
+// Parses a state-changing request's JSON body, refusing cross-site writes.
+// Browsers let any page POST a text/plain body cross-origin without a CORS
+// preflight, and req.json() would happily parse it, so requiring
+// application/json (which forces a preflight this server never answers) is
+// what stops CSRF. Sec-Fetch-Site is a second check for browsers that send it.
+async function readJsonBody(req) {
+  const type = (req.headers.get("content-type") || "").toLowerCase();
+  if (!type.startsWith("application/json")) {
+    return { error: "Content-Type must be application/json", status: 415 };
+  }
+  const site = req.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin" && site !== "none") {
+    return { error: "Cross-site requests are not allowed", status: 403 };
+  }
+  try {
+    return { body: (await req.json()) || {} };
+  } catch {
+    return { error: "Invalid JSON body", status: 400 };
+  }
+}
+
 export function startServer(port = 3000) {
   return serve({
     port,
+    maxRequestBodySize: MAX_BODY_BYTES,
+    // Without this, an uncaught exception renders Bun's development error
+    // page, which embeds server source and stack traces.
+    error(err) {
+      console.error(err);
+      return withSecurityHeaders(
+        Response.json({ error: "Internal Server Error" }, { status: 500 }),
+      );
+    },
     async fetch(req) {
-      const url = new URL(req.url);
-      const { pathname } = url;
-
-      if (pathname.startsWith("/api")) {
-        const headers = { "Content-Type": "application/json" };
-        const json = (body, status = 200) =>
-          new Response(JSON.stringify(body), { status, headers });
-
-        if (pathname === "/api/health") {
-          return json({ status: "ok", time: Date.now() });
-        }
-
-        if (pathname === "/api/stocks" && req.method === "GET") {
-          return json(
-            Object.values(market)
-              .filter((q) => q.kind === "spot")
-              .map((q) => publicQuote(q)),
-          );
-        }
-
-        if (pathname === "/api/futures" && req.method === "GET") {
-          return json(
-            Object.values(market)
-              .filter((q) => q.kind === "future")
-              .map((q) => publicQuote(q)),
-          );
-        }
-
-        if (pathname.startsWith("/api/stocks/") && req.method === "GET") {
-          const symbol = decodeURIComponent(pathname.split("/").pop() || "").toUpperCase();
-          if (market[symbol]) return json(publicQuote(market[symbol], true));
-          return json({ error: "Symbol not found" }, 404);
-        }
-
-        if (pathname === "/api/portfolio" && req.method === "GET") {
-          return json(portfolioView());
-        }
-
-        if (pathname === "/api/orders" && req.method === "GET") {
-          return json(orders);
-        }
-
-        if (pathname === "/api/orders" && req.method === "POST") {
-          let body;
-          try {
-            body = await req.json();
-          } catch {
-            return json({ error: "Invalid JSON body" }, 400);
-          }
-          const result = placeOrder(body || {});
-          if (result.error) return json({ error: result.error }, result.status);
-          return json({ order: result.order, portfolio: portfolioView() });
-        }
-
-        if (pathname === "/api/futures/orders" && req.method === "POST") {
-          let body;
-          try {
-            body = await req.json();
-          } catch {
-            return json({ error: "Invalid JSON body" }, 400);
-          }
-          const result = openFuture(body || {});
-          if (result.error) return json({ error: result.error }, result.status);
-          return json({ order: result.order, portfolio: portfolioView() });
-        }
-
-        if (pathname === "/api/futures/close" && req.method === "POST") {
-          let body;
-          try {
-            body = await req.json();
-          } catch {
-            return json({ error: "Invalid JSON body" }, 400);
-          }
-          const result = closeFuture(body || {});
-          if (result.error) return json({ error: result.error }, result.status);
-          return json({ order: result.order, portfolio: portfolioView() });
-        }
-
-        return json({ error: "Not Found" }, 404);
-      }
-
-      // Static files from ./public
-      const filePath = path.join("public", pathname === "/" ? "index.html" : pathname);
-      if (!filePath.startsWith("public")) {
-        return new Response("Forbidden", { status: 403 });
-      }
-
-      const file = Bun.file(filePath);
-      if (await file.exists()) {
-        const ext = path.extname(filePath);
-        return new Response(file, {
-          headers: { "Content-Type": MIME_TYPES[ext] || "application/octet-stream" },
-        });
-      }
-
-      return new Response("Not Found", { status: 404 });
+      return withSecurityHeaders(await handleRequest(req));
     },
   });
+}
+
+async function handleRequest(req) {
+  const url = new URL(req.url);
+  const { pathname } = url;
+
+  if (pathname.startsWith("/api")) {
+    const json = (body, status = 200) => Response.json(body, { status });
+
+    if (pathname === "/api/health") {
+      return json({ status: "ok", time: Date.now() });
+    }
+
+    if (pathname === "/api/stocks" && req.method === "GET") {
+      return json(
+        Object.values(market)
+          .filter((q) => q.kind === "spot")
+          .map((q) => publicQuote(q)),
+      );
+    }
+
+    if (pathname === "/api/futures" && req.method === "GET") {
+      return json(
+        Object.values(market)
+          .filter((q) => q.kind === "future")
+          .map((q) => publicQuote(q)),
+      );
+    }
+
+    if (pathname.startsWith("/api/stocks/") && req.method === "GET") {
+      let symbol;
+      try {
+        symbol = decodeURIComponent(pathname.split("/").pop() || "").toUpperCase();
+      } catch {
+        return json({ error: "Malformed symbol" }, 400);
+      }
+      if (Object.hasOwn(market, symbol)) return json(publicQuote(market[symbol], true));
+      return json({ error: "Symbol not found" }, 404);
+    }
+
+    if (pathname === "/api/portfolio" && req.method === "GET") {
+      return json(portfolioView());
+    }
+
+    if (pathname === "/api/orders" && req.method === "GET") {
+      return json(orders);
+    }
+
+    const writeHandlers = {
+      "/api/orders": placeOrder,
+      "/api/futures/orders": openFuture,
+      "/api/futures/close": closeFuture,
+    };
+    if (req.method === "POST" && Object.hasOwn(writeHandlers, pathname)) {
+      const parsed = await readJsonBody(req);
+      if (parsed.error) return json({ error: parsed.error }, parsed.status);
+      const result = writeHandlers[pathname](parsed.body);
+      if (result.error) return json({ error: result.error }, result.status);
+      return json({ order: result.order, portfolio: portfolioView() });
+    }
+
+    return json({ error: "Not Found" }, 404);
+  }
+
+  // Static files from ./public. Resolve to an absolute path and require it to
+  // stay inside PUBLIC_DIR (a bare startsWith("public") would also admit a
+  // sibling such as "public-private/").
+  const filePath = path.resolve(PUBLIC_DIR, "." + (pathname === "/" ? "/index.html" : pathname));
+  if (!filePath.startsWith(PUBLIC_DIR + path.sep)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  const file = Bun.file(filePath);
+  if (await file.exists()) {
+    const ext = path.extname(filePath);
+    return new Response(file, {
+      headers: { "Content-Type": MIME_TYPES[ext] || "application/octet-stream" },
+    });
+  }
+
+  return new Response("Not Found", { status: 404 });
 }
 
 if (import.meta.main) {

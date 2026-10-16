@@ -370,6 +370,51 @@ describe('Derivatives — futures', () => {
   });
 });
 
+describe('Security', () => {
+  test('rejects a text/plain order body (CSRF via simple request)', async () => {
+    const res = await api('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ symbol: 'AAPL', side: 'buy', quantity: 1 }),
+    });
+    expect(res.status).toBe(415);
+  });
+
+  test('rejects writes the browser marks as cross-site', async () => {
+    for (const path of ['/api/orders', '/api/futures/orders', '/api/futures/close']) {
+      const res = await api(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Sec-Fetch-Site': 'cross-site' },
+        body: JSON.stringify({ symbol: 'AAPL', side: 'buy', quantity: 1 }),
+      });
+      expect(res.status).toBe(403);
+    }
+  });
+
+  test('malformed percent-encoding returns 400 without leaking source', async () => {
+    const res = await api('/api/stocks/%E0%A4%A');
+    expect(res.status).toBe(400);
+    expect(await res.text()).not.toContain('__bunfallback');
+  });
+
+  test('responses carry security headers', async () => {
+    for (const path of ['/', '/api/health', '/nope']) {
+      const res = await api(path);
+      expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(res.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+    }
+  });
+
+  test('oversized request bodies are refused', async () => {
+    const res = await api('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pad: 'x'.repeat(128 * 1024) }),
+    });
+    expect(res.status).toBe(413);
+  });
+});
+
 describe('Market ticker', () => {
   test('prices tick upward in volume and refresh updatedAt over time', async () => {
     const before = await (await api('/api/stocks/AAPL')).json();
