@@ -6,55 +6,85 @@
   <title>BunTrade — Paper Trading</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="acme.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="bt-header">
-      <div class="bt-brand">
-        <span class="acme-wordmark"><span class="acme-wordmark__mark">B</span>BunTrade</span>
-        <span class="acme-badge">Paper</span>
-      </div>
-      <div class="bt-live">
-        <span class="pulse-dot" aria-hidden="true"></span>
-        <span id="updated-label">—</span>
-      </div>
-    </header>
-
-    <div class="account-strip" id="account-strip"></div>
-
-    <section class="markets-head">
-      <h3 class="section-label">Markets</h3>
-      <input id="search" class="acme-input" type="text" placeholder="Search symbol or name…" autocomplete="off" />
-      <div class="acme-tabs asset-tabs" id="asset-tabs" role="tablist"></div>
-    </section>
-    <div id="market-list" class="market-list"></div>
-
-    <div class="card-wrap">
-      <article class="acme-card panel-card" id="trade-card"></article>
+  <header class="acme-topbar bt-topbar">
+    <a class="acme-wordmark bt-wordmark" href="#trade"><span class="acme-wordmark__mark">B</span>BunTrade</a>
+    <nav class="acme-topbar__nav bt-nav" aria-label="Main">
+      <a class="acme-topbar__link" href="#trade" aria-current="page">Trade</a>
+      <a class="acme-topbar__link" href="#portfolio">Portfolio</a>
+      <a class="acme-topbar__link" href="#orders">Orders</a>
+    </nav>
+    <div class="bt-meta">
+      <span class="acme-badge acme-badge--info">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Paper account
+      </span>
+      <span class="bt-updated" id="updated-label">Connecting…</span>
     </div>
+  </header>
 
-    <div class="card-wrap">
-      <article class="acme-card panel-card">
-        <div class="card-head">
-          <h3 class="section-label" style="margin:0">Portfolio</h3>
-          <span id="pf-equity" class="card-head-value"></span>
+  <main class="bt-main">
+    <section id="trade" class="bt-summary" aria-label="Account summary"></section>
+
+    <div class="bt-trade-row">
+      <section class="acme-card bt-card bt-markets" aria-labelledby="markets-h">
+        <div class="bt-markets__head">
+          <div class="bt-card-head">
+            <h2 id="markets-h" class="bt-card-title">Markets</h2>
+            <span class="bt-card-meta" id="market-count"></span>
+          </div>
+          <div class="acme-field">
+            <label class="acme-label sr-only" for="search">Search markets</label>
+            <input id="search" class="acme-input" type="search" placeholder="Search symbol or name" autocomplete="off" />
+          </div>
+          <div class="acme-tabs bt-asset-tabs" id="asset-tabs" role="tablist" aria-label="Asset class"></div>
         </div>
-        <div id="portfolio-body"></div>
-      </article>
+        <div class="bt-market-scroll">
+          <table class="acme-table bt-market-table">
+            <thead>
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col" class="bt-col-spark"><span class="sr-only">Trend</span></th>
+                <th scope="col" class="acme-table__num bt-col-price">Price</th>
+              </tr>
+            </thead>
+            <tbody id="market-list"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="acme-card bt-card bt-chart" id="chart-card" aria-live="off" aria-labelledby="chart-h"></section>
+
+      <section class="acme-card bt-card bt-ticket" id="trade-card" aria-labelledby="ticket-h"></section>
     </div>
 
-    <div class="card-wrap card-wrap--last">
-      <article class="acme-card panel-card">
-        <h3 class="section-label">Order history</h3>
-        <div id="orders-body"></div>
-      </article>
-    </div>
-  </div>
+    <section id="portfolio" class="acme-card bt-card bt-table-card" aria-labelledby="pos-h">
+      <div class="bt-card-head bt-table-card__head">
+        <h2 id="pos-h" class="bt-card-title">Open positions</h2>
+        <span class="bt-card-meta" id="pf-meta"></span>
+      </div>
+      <div id="portfolio-body"></div>
+    </section>
 
-  <div id="toast" class="toast"></div>
+    <section id="orders" class="acme-card bt-card bt-table-card" aria-labelledby="ord-h">
+      <div class="bt-card-head bt-table-card__head">
+        <h2 id="ord-h" class="bt-card-title">Order history</h2>
+        <span class="bt-card-meta" id="orders-meta"></span>
+      </div>
+      <div id="orders-body"></div>
+    </section>
+
+    <footer class="bt-footer">
+      <span>BunTrade is a simulation. Prices are randomly generated and reset when the server restarts.</span>
+      <span>Started with $100,000 in paper cash</span>
+    </footer>
+  </main>
+
+  <div id="toast" class="bt-toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
 </html>
