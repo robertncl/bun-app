@@ -13,43 +13,49 @@
 <body>
   <header class="acme-topbar bt-topbar">
     <a class="acme-wordmark bt-wordmark" href="#trade"><span class="acme-wordmark__mark">B</span>BunTrade</a>
-    <nav class="acme-topbar__nav bt-nav" aria-label="Main">
-      <a class="acme-topbar__link" href="#trade" aria-current="page">Trade</a>
-      <a class="acme-topbar__link" href="#portfolio">Portfolio</a>
-      <a class="acme-topbar__link" href="#orders">Orders</a>
+    <nav class="acme-topbar__nav bt-nav" aria-label="Main" data-i18n-aria-label="nav.label">
+      <a class="acme-topbar__link" href="#trade" aria-current="page" data-i18n="nav.trade">Trade</a>
+      <a class="acme-topbar__link" href="#portfolio" data-i18n="nav.portfolio">Portfolio</a>
+      <a class="acme-topbar__link" href="#orders" data-i18n="nav.orders">Orders</a>
     </nav>
     <div class="bt-meta">
       <span class="acme-badge acme-badge--info">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        Paper account
+        <span data-i18n="header.paper">Paper account</span>
       </span>
-      <span class="bt-updated" id="updated-label">Connecting…</span>
+      <span class="bt-updated" id="updated-label" data-i18n="header.connecting">Connecting…</span>
+      <div class="bt-prefs">
+        <label class="sr-only" for="lang-select" data-i18n="prefs.language">Language</label>
+        <select id="lang-select" class="acme-input bt-select" data-i18n-aria-label="prefs.language" aria-label="Language"></select>
+        <label class="sr-only" for="currency-select" data-i18n="prefs.currency">Display currency</label>
+        <select id="currency-select" class="acme-input bt-select" data-i18n-aria-label="prefs.currency" aria-label="Display currency"></select>
+      </div>
     </div>
   </header>
 
   <main class="bt-main">
-    <section id="trade" class="bt-summary" aria-label="Account summary"></section>
+    <section id="trade" class="bt-summary" aria-label="Account summary" data-i18n-aria-label="summary.label"></section>
 
     <div class="bt-trade-row">
       <section class="acme-card bt-card bt-markets" aria-labelledby="markets-h">
         <div class="bt-markets__head">
           <div class="bt-card-head">
-            <h2 id="markets-h" class="bt-card-title">Markets</h2>
+            <h2 id="markets-h" class="bt-card-title" data-i18n="markets.title">Markets</h2>
             <span class="bt-card-meta" id="market-count"></span>
           </div>
           <div class="acme-field">
-            <label class="acme-label sr-only" for="search">Search markets</label>
-            <input id="search" class="acme-input" type="search" placeholder="Search symbol or name" autocomplete="off" />
+            <label class="acme-label sr-only" for="search" data-i18n="markets.search">Search markets</label>
+            <input id="search" class="acme-input" type="search" placeholder="Search symbol or name" data-i18n-placeholder="markets.searchPlaceholder" autocomplete="off" />
           </div>
-          <div class="acme-tabs bt-asset-tabs" id="asset-tabs" role="tablist" aria-label="Asset class"></div>
+          <div class="acme-tabs bt-asset-tabs" id="asset-tabs" role="tablist" aria-label="Asset class" data-i18n-aria-label="markets.assetClass"></div>
         </div>
         <div class="bt-market-scroll">
           <table class="acme-table bt-market-table">
             <thead>
               <tr>
-                <th scope="col">Symbol</th>
-                <th scope="col" class="bt-col-spark"><span class="sr-only">Trend</span></th>
-                <th scope="col" class="acme-table__num bt-col-price">Price</th>
+                <th scope="col" data-i18n="markets.colSymbol">Symbol</th>
+                <th scope="col" class="bt-col-spark"><span class="sr-only" data-i18n="markets.colTrend">Trend</span></th>
+                <th scope="col" class="acme-table__num bt-col-price" id="col-price">Price</th>
               </tr>
             </thead>
             <tbody id="market-list"></tbody>
@@ -64,7 +70,7 @@
 
     <section id="portfolio" class="acme-card bt-card bt-table-card" aria-labelledby="pos-h">
       <div class="bt-card-head bt-table-card__head">
-        <h2 id="pos-h" class="bt-card-title">Open positions</h2>
+        <h2 id="pos-h" class="bt-card-title" data-i18n="positions.title">Open positions</h2>
         <span class="bt-card-meta" id="pf-meta"></span>
       </div>
       <div id="portfolio-body"></div>
@@ -72,19 +78,21 @@
 
     <section id="orders" class="acme-card bt-card bt-table-card" aria-labelledby="ord-h">
       <div class="bt-card-head bt-table-card__head">
-        <h2 id="ord-h" class="bt-card-title">Order history</h2>
+        <h2 id="ord-h" class="bt-card-title" data-i18n="orders.title">Order history</h2>
         <span class="bt-card-meta" id="orders-meta"></span>
       </div>
       <div id="orders-body"></div>
     </section>
 
     <footer class="bt-footer">
-      <span>BunTrade is a simulation. Prices are randomly generated and reset when the server restarts.</span>
-      <span>Started with $100,000 in paper cash</span>
+      <span data-i18n="footer.sim">BunTrade is a simulation. Prices are randomly generated and reset when the server restarts.</span>
+      <span id="footer-start">Started with $100,000 in paper cash</span>
+      <span id="footer-fx" hidden></span>
     </footer>
   </main>
 
   <div id="toast" class="bt-toast" role="status" aria-live="polite"></div>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
