@@ -428,3 +428,72 @@ describe('Market ticker', () => {
     expect(after.history.length).toBeLessThanOrEqual(60);
   }, 4000);
 });
+
+describe('Localization & display currency', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const LOCALE_DIR = path.join(import.meta.dir, '..', 'public', 'locales');
+  const LOCALE_CODES = ['en', 'zh-CN', 'hi', 'es', 'ar', 'fr', 'bn', 'pt-BR', 'ru', 'id'];
+  const load = (code) => JSON.parse(fs.readFileSync(path.join(LOCALE_DIR, `${code}.json`), 'utf8'));
+  const placeholders = (v) =>
+    new Set([...(typeof v === 'string' ? [v] : Object.values(v)).join(' ').matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+
+  test('GET /api/fx returns USD-based indicative rates', async () => {
+    const res = await api('/api/fx');
+    expect(res.status).toBe(200);
+    const fx = await res.json();
+    expect(fx.base).toBe('USD');
+    expect(fx.indicative).toBe(true);
+    expect(fx.rates.USD).toBe(1);
+    for (const [code, rate] of Object.entries(fx.rates)) {
+      expect(code).toMatch(/^[A-Z]{3}$/);
+      expect(rate).toBeGreaterThan(0);
+    }
+  });
+
+  test('order errors carry a stable code the UI can translate', async () => {
+    const funds = await postOrder({ symbol: 'BTC', side: 'buy', quantity: 1_000_000 });
+    expect(await funds.json()).toMatchObject({ code: 'insufficient_funds' });
+    const qty = await postOrder({ symbol: 'AAPL', side: 'buy', quantity: 0 });
+    expect(await qty.json()).toMatchObject({ code: 'invalid_quantity' });
+    const close = await closeFuture({ symbol: 'NQ' });
+    expect(await close.json()).toMatchObject({ code: 'no_position' });
+  });
+
+  test('every error code the server can return has an English message', () => {
+    const src = fs.readFileSync(path.join(import.meta.dir, '..', 'src', 'index.js'), 'utf8');
+    const codes = [...src.matchAll(/code: "(\w+)"/g)].map((m) => m[1]);
+    expect(codes.length).toBeGreaterThan(0);
+    const en = load('en');
+    for (const code of codes) expect(en).toHaveProperty([`error.${code}`]);
+  });
+
+  test('i18n script and locale files are served as static assets', async () => {
+    const js = await api('/i18n.js');
+    expect(js.status).toBe(200);
+    expect(js.headers.get('content-type')).toContain('javascript');
+    const en = await api('/locales/en.json');
+    expect(en.status).toBe(200);
+    expect(en.headers.get('content-type')).toContain('application/json');
+  });
+
+  test.each(LOCALE_CODES)('%s catalog matches English keys and placeholders', (code) => {
+    const en = load('en');
+    const messages = load(code);
+    expect(Object.keys(messages).sort()).toEqual(Object.keys(en).sort());
+    for (const [key, enValue] of Object.entries(en)) {
+      const value = messages[key];
+      expect(typeof value).toBe(typeof enValue);
+      const want = placeholders(enValue);
+      const got = placeholders(value);
+      // Plural forms may spell the number out ("one", "two"), so {count} is
+      // optional there; every other placeholder must survive translation.
+      for (const p of got) expect(want.has(p)).toBe(true);
+      for (const p of want) {
+        if (p === 'count' && typeof enValue === 'object') continue;
+        expect(got.has(p)).toBe(true);
+      }
+      if (typeof enValue === 'object') expect(value).toHaveProperty('other');
+    }
+  });
+});

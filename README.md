@@ -31,6 +31,13 @@ trading **stocks, crypto, commodities and derivatives** against an in-memory por
   holdings (with average cost), open futures positions (entry, mark, margin, leverage,
   open P&L), margin used, and combined realized / unrealized P&L. Equity rolls up cash,
   spot value, locked margin and open derivative P&L.
+- **10 languages, 20 display currencies** — English, 中文（简体）, हिन्दी, Español,
+  العربية (right-to-left), Français, বাংলা, Português (Brasil), Русский and Bahasa
+  Indonesia, picked from the browser language on first visit. All numbers, dates and
+  plurals are formatted with `Intl` for the chosen locale. A currency picker converts
+  every amount for display at fixed indicative rates (`/api/fx`); the account itself
+  stays in USD and orders always settle in USD. Index futures stay in index points.
+  Both choices are remembered per browser.
 - **No build step, no runtime dependencies** — vanilla JS/CSS front end served straight
   from `public/`; charts are hand-rendered SVG.
 
@@ -43,6 +50,8 @@ bun-app
 ├── public
 │   ├── index.html        # Dashboard markup
 │   ├── app.js            # Front-end controller (polling, rendering, trading)
+│   ├── i18n.js           # Locale loading, t() with plurals, Intl/currency formatting
+│   ├── locales/          # One JSON message catalog per language (en.json is the source)
 │   └── style.css         # Dark trading theme
 ├── tests
 │   └── index.test.js     # API + trading-engine tests
@@ -72,6 +81,17 @@ The server starts on http://localhost:3000.
 | POST   | `/api/orders`          | Place a spot market order (buy/sell).                    |
 | POST   | `/api/futures/orders`  | Open/add a futures position (long/short).                |
 | POST   | `/api/futures/close`   | Close a futures position (all, or `contracts` of it).    |
+| GET    | `/api/fx`              | Display-currency rates per 1 USD (`{ base, indicative, rates }`); fixed, simulated. |
+
+Error responses are `{ "error": "<English message>", "code": "<stable_code>" }`; the UI
+shows the translation for `code` (see the `error.*` keys in `public/locales/`).
+
+### Adding a language
+
+Copy `public/locales/en.json` to `public/locales/<code>.json`, translate the values
+(keep `{placeholders}`; plural entries are keyed by `Intl.PluralRules` category), and add
+the locale to `LOCALES` in `public/i18n.js` and to the list in the catalog test.
+`bun test` fails if a catalog is missing keys or drops a placeholder.
 
 ### Placing a spot order
 

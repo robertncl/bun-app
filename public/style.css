@@ -50,6 +50,36 @@ body { font-size: var(--acme-text-sm); }
 }
 .bt-updated { font-size: var(--acme-text-xs); color: var(--acme-color-text-subtle); }
 
+/* ---------- Language + currency pickers ---------- */
+.bt-prefs { display: flex; gap: var(--acme-space-2); }
+.bt-select {
+  min-height: 2rem;
+  padding-inline: var(--acme-space-2);
+  font-size: var(--acme-text-xs);
+  max-width: 13rem;
+  cursor: pointer;
+}
+
+/* Scripts Inter has no glyphs for: i18n.js loads the matching Noto face and
+   these put it straight after Inter, so Latin text, digits and symbols keep
+   the design's typeface. */
+:root:lang(zh-CN) {
+  --font-sans: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  --font-display: "Source Serif 4", "Noto Sans SC", serif;
+}
+:root:lang(hi) {
+  --font-sans: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-display: "Source Serif 4", "Noto Sans Devanagari", serif;
+}
+:root:lang(ar) {
+  --font-sans: "Inter", "Noto Sans Arabic", system-ui, sans-serif;
+  --font-display: "Source Serif 4", "Noto Sans Arabic", serif;
+}
+:root:lang(bn) {
+  --font-sans: "Inter", "Noto Sans Bengali", system-ui, sans-serif;
+  --font-display: "Source Serif 4", "Noto Sans Bengali", serif;
+}
+
 /* ---------- Page ---------- */
 .bt-main {
   max-width: 1360px;
@@ -73,7 +103,9 @@ body { font-size: var(--acme-text-sm); }
   box-shadow: var(--acme-shadow-sm);
 }
 .bt-stat { background: var(--acme-color-surface-raised); padding: var(--acme-space-4) var(--acme-space-5); }
-.bt-stat__value { font-size: var(--acme-text-xl); font-weight: 600; margin-top: 6px; }
+/* Amounts never wrap mid-number ("+" / "₹2,38,235.76"); fitStatValues() in
+   app.js shrinks the rare long one (IDR, KRW) to fit its tile instead. */
+.bt-stat__value { font-size: var(--acme-text-xl); font-weight: 600; margin-top: 6px; white-space: nowrap; }
 .bt-stat--lead .bt-stat__value {
   margin-top: 0;
   font-family: var(--acme-font-display);

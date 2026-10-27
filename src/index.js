@@ -128,6 +128,37 @@ const TICK_MS = 2000;         // how often prices move
 const STARTING_CASH = 100_000;
 
 // ---------------------------------------------------------------------------
+// Display currencies
+//
+// The account is denominated and settled in USD; these rates only convert
+// figures for display. Like the market itself they are simulated — fixed
+// indicative rates (units of currency per 1 USD), not a live FX feed.
+// ---------------------------------------------------------------------------
+const BASE_CURRENCY = "USD";
+const FX_RATES = {
+  USD: 1,
+  EUR: 0.92,
+  JPY: 150,
+  GBP: 0.78,
+  CNY: 7.2,
+  INR: 84,
+  CAD: 1.37,
+  AUD: 1.52,
+  CHF: 0.88,
+  HKD: 7.8,
+  SGD: 1.34,
+  KRW: 1380,
+  BRL: 5.6,
+  MXN: 18.5,
+  RUB: 92,
+  IDR: 15800,
+  SAR: 3.75,
+  AED: 3.6725,
+  BDT: 120,
+  PKR: 280,
+};
+
+// ---------------------------------------------------------------------------
 // In-memory state
 //
 // MVP scope: a single shared paper-trading account. State lives in memory and
@@ -346,16 +377,16 @@ function placeOrder(req) {
   const quantity = Number(req.quantity);
 
   if (!market[symbol]) {
-    return { error: "Unknown symbol", status: 400 };
+    return { error: "Unknown symbol", code: "unknown_symbol", status: 400 };
   }
   if (market[symbol].kind !== "spot") {
-    return { error: "Futures trade on the derivatives desk", status: 400 };
+    return { error: "Futures trade on the derivatives desk", code: "futures_desk", status: 400 };
   }
   if (side !== "buy" && side !== "sell") {
-    return { error: "Side must be 'buy' or 'sell'", status: 400 };
+    return { error: "Side must be 'buy' or 'sell'", code: "invalid_side", status: 400 };
   }
   if (!Number.isInteger(quantity) || quantity <= 0) {
-    return { error: "Quantity must be a positive whole number", status: 400 };
+    return { error: "Quantity must be a positive whole number", code: "invalid_quantity", status: 400 };
   }
 
   const q = market[symbol];
@@ -364,7 +395,7 @@ function placeOrder(req) {
 
   if (side === "buy") {
     if (total > portfolio.cash) {
-      return { error: "Insufficient funds", status: 400 };
+      return { error: "Insufficient funds", code: "insufficient_funds", status: 400 };
     }
     portfolio.cash = round2(portfolio.cash - total);
     const h = portfolio.holdings[symbol] || { shares: 0, avgCost: 0 };
@@ -375,7 +406,7 @@ function placeOrder(req) {
   } else {
     const h = portfolio.holdings[symbol];
     if (!h || h.shares < quantity) {
-      return { error: "Insufficient shares", status: 400 };
+      return { error: "Insufficient shares", code: "insufficient_shares", status: 400 };
     }
     portfolio.cash = round2(portfolio.cash + total);
     portfolio.realizedPL = round2(portfolio.realizedPL + (price - h.avgCost) * quantity);
@@ -452,7 +483,7 @@ function planFuturesOrder(q, sign, contracts) {
 function tradeFuture(q, sign, contracts, intent, dirLabel) {
   const plan = planFuturesOrder(q, sign, contracts);
   if (plan.cashDelta < 0 && -plan.cashDelta > portfolio.cash + 1e-6) {
-    return { error: "Insufficient margin", status: 400 };
+    return { error: "Insufficient margin", code: "insufficient_margin", status: 400 };
   }
 
   portfolio.cash = round2(portfolio.cash + plan.cashDelta);
@@ -491,13 +522,13 @@ function openFuture(req) {
   const q = market[symbol];
 
   if (!q || q.kind !== "future") {
-    return { error: "Unknown futures contract", status: 400 };
+    return { error: "Unknown futures contract", code: "unknown_contract", status: 400 };
   }
   if (direction !== "long" && direction !== "short") {
-    return { error: "Direction must be 'long' or 'short'", status: 400 };
+    return { error: "Direction must be 'long' or 'short'", code: "invalid_direction", status: 400 };
   }
   if (!Number.isInteger(contracts) || contracts <= 0) {
-    return { error: "Contracts must be a positive whole number", status: 400 };
+    return { error: "Contracts must be a positive whole number", code: "invalid_contracts", status: 400 };
   }
 
   return tradeFuture(q, direction === "long" ? 1 : -1, contracts, "open", direction);
@@ -507,18 +538,18 @@ function closeFuture(req) {
   const symbol = typeof req.symbol === "string" ? req.symbol.toUpperCase() : "";
   const q = market[symbol];
   if (!q || q.kind !== "future") {
-    return { error: "Unknown futures contract", status: 400 };
+    return { error: "Unknown futures contract", code: "unknown_contract", status: 400 };
   }
 
   const pos = portfolio.positions[symbol];
   if (!pos) {
-    return { error: "No open position to close", status: 400 };
+    return { error: "No open position to close", code: "no_position", status: 400 };
   }
 
   const held = Math.abs(pos.net);
   let contracts = req.contracts === undefined ? held : Number(req.contracts);
   if (!Number.isInteger(contracts) || contracts <= 0) {
-    return { error: "Contracts must be a positive whole number", status: 400 };
+    return { error: "Contracts must be a positive whole number", code: "invalid_contracts", status: 400 };
   }
   contracts = Math.min(contracts, held); // a close never flips the position
 
@@ -538,16 +569,16 @@ function closeFuture(req) {
 async function readJsonBody(req) {
   const type = (req.headers.get("content-type") || "").toLowerCase();
   if (!type.startsWith("application/json")) {
-    return { error: "Content-Type must be application/json", status: 415 };
+    return { error: "Content-Type must be application/json", code: "unsupported_media_type", status: 415 };
   }
   const site = req.headers.get("sec-fetch-site");
   if (site && site !== "same-origin" && site !== "none") {
-    return { error: "Cross-site requests are not allowed", status: 403 };
+    return { error: "Cross-site requests are not allowed", code: "cross_site", status: 403 };
   }
   try {
     return { body: (await req.json()) || {} };
   } catch {
-    return { error: "Invalid JSON body", status: 400 };
+    return { error: "Invalid JSON body", code: "invalid_json", status: 400 };
   }
 }
 
@@ -615,6 +646,10 @@ async function handleRequest(req) {
       return json(orders);
     }
 
+    if (pathname === "/api/fx" && req.method === "GET") {
+      return json({ base: BASE_CURRENCY, indicative: true, rates: FX_RATES });
+    }
+
     const writeHandlers = {
       "/api/orders": placeOrder,
       "/api/futures/orders": openFuture,
@@ -622,9 +657,9 @@ async function handleRequest(req) {
     };
     if (req.method === "POST" && Object.hasOwn(writeHandlers, pathname)) {
       const parsed = await readJsonBody(req);
-      if (parsed.error) return json({ error: parsed.error }, parsed.status);
+      if (parsed.error) return json({ error: parsed.error, code: parsed.code }, parsed.status);
       const result = writeHandlers[pathname](parsed.body);
-      if (result.error) return json({ error: result.error }, result.status);
+      if (result.error) return json({ error: result.error, code: result.code }, result.status);
       return json({ order: result.order, portfolio: portfolioView() });
     }
 
