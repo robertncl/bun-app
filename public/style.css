@@ -263,7 +263,10 @@ body { font-size: var(--acme-text-sm); }
 /* ---------- Positions + orders tables ---------- */
 .bt-table-card { overflow: hidden; }
 .bt-table-card__head { padding: var(--acme-space-5) var(--acme-space-5) var(--acme-space-3); }
-.bt-table-scroll { overflow-x: auto; }
+/* position: relative makes the scroller the containing block for the
+   absolutely positioned .sr-only header labels, so they're clipped with the
+   table instead of stretching the page sideways on phones. */
+.bt-table-scroll { overflow-x: auto; position: relative; }
 .bt-table-scroll .acme-table { min-width: 760px; }
 .bt-table-scroll :is(th, td):first-child { padding-inline-start: var(--acme-space-5); }
 .bt-table-scroll :is(th, td):last-child { padding-inline-end: var(--acme-space-5); }
