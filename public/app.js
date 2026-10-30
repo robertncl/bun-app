@@ -35,6 +35,9 @@ let ticketKey = "";        // symbol|side|locale|currency the ticket markup was 
 const downClass = (n) => (n < 0 ? " down" : "");
 const isFuture = (s) => s && s.kind === "future";
 const isPoints = (s) => isFuture(s) && s.unit === "index";
+// Everything interpolated into innerHTML is escaped, server data included:
+// symbols and currency codes come from fixed tables today, but the templates
+// shouldn't depend on that staying true.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = (id) => document.getElementById(id);
 
@@ -135,7 +138,7 @@ function renderPrefs() {
   ).join("");
   const cur = $("currency-select");
   cur.innerHTML = Object.keys(i18n.rates).map((code) =>
-    `<option value="${code}"${code === i18n.currency ? " selected" : ""}>${code} · ${esc(fmt.currencyName(code))}</option>`
+    `<option value="${esc(code)}"${code === i18n.currency ? " selected" : ""}>${esc(code)} · ${esc(fmt.currencyName(code))}</option>`
   ).join("");
 }
 
@@ -225,10 +228,10 @@ function visibleStocks() {
 function rowHTML(s) {
   const tag = isFuture(s) ? `<span class="acme-badge bt-tag">${lev(s.leverage)}</span>` : "";
   const sel = s.symbol === selected;
-  return `<tr data-symbol="${s.symbol}" aria-selected="${sel}">
+  return `<tr data-symbol="${esc(s.symbol)}" aria-selected="${sel}">
     <td>
-      <button class="bt-row-btn" data-symbol="${s.symbol}"${sel ? ' aria-current="true"' : ""}>
-        <span class="bt-sym-line"><span class="mono">${s.symbol}</span>${tag}</span>
+      <button class="bt-row-btn" data-symbol="${esc(s.symbol)}"${sel ? ' aria-current="true"' : ""}>
+        <span class="bt-sym-line"><span class="mono">${esc(s.symbol)}</span>${tag}</span>
         <span class="bt-row-name">${esc(s.name)}</span>
       </button>
     </td>
@@ -279,7 +282,7 @@ function renderChart() {
     <div class="bt-chart__head">
       <div>
         <div class="bt-chart__sym">
-          <span class="mono">${s.symbol}</span>
+          <span class="mono">${esc(s.symbol)}</span>
           <span class="acme-badge">${th("class." + s.assetClass)} · ${esc(sectorLabel(s))}</span>
         </div>
         <h2 id="chart-h" class="bt-chart__name">${esc(s.name)}</h2>
@@ -507,7 +510,7 @@ function renderPortfolio() {
   }
 
   const row = (r) => `<tr>
-    <td><button class="bt-row-btn" data-symbol="${r.symbol}"><span class="mono">${r.symbol}</span> <span class="bt-sub">${esc(r.name)}</span></button></td>
+    <td><button class="bt-row-btn" data-symbol="${esc(r.symbol)}"><span class="mono">${esc(r.symbol)}</span> <span class="bt-sub">${esc(r.name)}</span></button></td>
     <td><span class="acme-badge">${esc(r.side)}</span></td>
     <td class="acme-table__num">${fmt.int(r.qty)}</td>
     <td class="acme-table__num">${quote(r.inst, r.entry)}</td>
@@ -515,7 +518,7 @@ function renderPortfolio() {
     <td class="acme-table__num">${r.value}</td>
     <td class="acme-table__num">${r.lev}</td>
     <td class="acme-table__num bt-pl${downClass(r.pl)}">${fmt.money(r.pl, { signed: true })}</td>
-    <td class="bt-actions"><button type="button" class="acme-btn acme-btn--ghost acme-btn--sm" data-close="${r.symbol}" data-kind="${r.kind}">${th("side.close")}</button></td>
+    <td class="bt-actions"><button type="button" class="acme-btn acme-btn--ghost acme-btn--sm" data-close="${esc(r.symbol)}" data-kind="${esc(r.kind)}">${th("side.close")}</button></td>
   </tr>`;
 
   const rows = [
@@ -562,7 +565,7 @@ function orderRow(o) {
   const q = o.kind === "future" ? o.contracts : o.quantity;
   return `<tr>
     <td class="bt-time">${fmt.time(o.timestamp)}</td>
-    <td><strong>${esc(label)}</strong> <span class="mono">${o.symbol}</span></td>
+    <td><strong>${esc(label)}</strong> <span class="mono">${esc(o.symbol)}</span></td>
     <td class="acme-table__num">${fmt.int(q)}</td>
     <td class="acme-table__num">${quote(stocks[o.symbol] || { kind: o.kind }, o.price)}</td>
     <td class="acme-table__num">${total}</td>
