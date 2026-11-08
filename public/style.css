@@ -1,12 +1,13 @@
-/* BunTrade app styles — the "Website Redesign" canvas: a desktop trading
-   dashboard (app bar, account summary, markets · chart · ticket row,
-   positions and order history tables) that stacks into a single column on
-   phones. Built on the ACME design language (acme.css): Oat surfaces, Clay
-   for the one primary action and for orientation (current page, selected
-   market, selected side), Brick only for losses. Gains stay in muted ink —
-   there is no "success green" in this system. */
+/* BunTrade app styles — a desktop trading dashboard (app bar, account
+   summary, markets · chart · ticket row, positions and order history tables)
+   that stacks into a single column on phones. Built on the ACME design
+   language v5 (acme.css): white Graphite surfaces with hairlines, ink for the
+   one primary action, Blue for interaction (selected market, selected side,
+   the chart's price line), Green for gains and Red for losses — always with
+   a +/− sign so direction never rests on colour alone. Light theme only. */
 
-.down { color: var(--acme-color-danger) !important; }
+.up { color: var(--acme-color-success-soft-text) !important; }
+.down { color: var(--acme-color-danger-soft-text) !important; }
 .num { font-variant-numeric: tabular-nums; }
 .mono { font-family: var(--acme-font-mono); font-weight: 600; font-size: 0.8125rem; }
 .sr-only {
@@ -23,9 +24,9 @@
 .label-caps {
   font-size: var(--acme-text-xs);
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--acme-tracking-caps);
   text-transform: uppercase;
-  color: var(--acme-color-text-subtle);
+  color: var(--acme-color-text-muted);
 }
 
 body { font-size: var(--acme-text-sm); }
@@ -37,7 +38,7 @@ body { font-size: var(--acme-text-sm); }
   z-index: 10;
   flex-wrap: wrap;
   row-gap: var(--acme-space-2);
-  background: var(--acme-color-surface-raised);
+  background: var(--acme-color-canvas);
 }
 .bt-wordmark { font-size: 0.875rem; }
 .bt-nav { margin-inline-start: 0; flex-wrap: wrap; }
@@ -65,19 +66,15 @@ body { font-size: var(--acme-text-sm); }
    the design's typeface. */
 :root:lang(zh-CN) {
   --font-sans: "Inter", "Noto Sans SC", system-ui, sans-serif;
-  --font-display: "Source Serif 4", "Noto Sans SC", serif;
 }
 :root:lang(hi) {
   --font-sans: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-display: "Source Serif 4", "Noto Sans Devanagari", serif;
 }
 :root:lang(ar) {
   --font-sans: "Inter", "Noto Sans Arabic", system-ui, sans-serif;
-  --font-display: "Source Serif 4", "Noto Sans Arabic", serif;
 }
 :root:lang(bn) {
   --font-sans: "Inter", "Noto Sans Bengali", system-ui, sans-serif;
-  --font-display: "Source Serif 4", "Noto Sans Bengali", serif;
 }
 
 /* ---------- Page ---------- */
@@ -108,10 +105,9 @@ body { font-size: var(--acme-text-sm); }
 .bt-stat__value { font-size: var(--acme-text-xl); font-weight: 600; margin-top: 6px; white-space: nowrap; }
 .bt-stat--lead .bt-stat__value {
   margin-top: 0;
-  font-family: var(--acme-font-display);
   font-size: var(--acme-text-3xl);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: var(--acme-tracking-tight);
   line-height: 1.2;
 }
 .bt-stat__sub { font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); }
@@ -125,7 +121,7 @@ body { font-size: var(--acme-text-sm); }
   justify-content: space-between;
   gap: var(--acme-space-2);
 }
-.bt-card-title { margin: 0; font-size: var(--acme-text-xl); }
+.bt-card-title { margin: 0; font-size: var(--acme-text-md); letter-spacing: var(--acme-tracking-snug); }
 .bt-card-meta { font-size: var(--acme-text-xs); color: var(--acme-color-text-subtle); }
 
 .bt-trade-row {
@@ -179,7 +175,7 @@ body { font-size: var(--acme-text-sm); }
   text-overflow: ellipsis;
 }
 .bt-tag { font-size: 0.6875rem; }
-.bt-price { font-weight: 600; }
+.bt-price { font-weight: 500; }
 .bt-chg { font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); }
 .bt-spark { display: block; }
 .bt-empty { text-align: center; color: var(--acme-color-text-subtle); padding: var(--acme-space-6) var(--acme-space-4) !important; }
@@ -199,14 +195,12 @@ body { font-size: var(--acme-text-sm); }
   gap: var(--acme-space-4);
 }
 .bt-chart__sym { display: flex; align-items: center; gap: var(--acme-space-2); }
-.bt-chart__sym .mono { color: var(--acme-color-accent); }
-.bt-chart__name { margin: var(--acme-space-1) 0 0; font-size: var(--acme-text-3xl); }
+.bt-chart__name { margin: var(--acme-space-1) 0 0; font-size: var(--acme-text-2xl); letter-spacing: var(--acme-tracking-tight); }
 .bt-chart__quote { text-align: end; }
 .bt-chart__price {
-  font-family: var(--acme-font-display);
   font-size: var(--acme-text-4xl);
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  letter-spacing: var(--acme-tracking-tight);
   line-height: 1.1;
 }
 .bt-chart__chg { color: var(--acme-color-text-muted); }
@@ -226,7 +220,7 @@ body { font-size: var(--acme-text-sm); }
   border-top: 1px solid var(--acme-color-border);
   padding-top: var(--acme-space-4);
 }
-.bt-stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bt-stats dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
 
 /* ---------- Ticket ---------- */
 .bt-ticket {
@@ -304,7 +298,7 @@ body { font-size: var(--acme-text-sm); }
 .bt-table-scroll :is(th, td):last-child { padding-inline-end: var(--acme-space-5); }
 .bt-table-scroll tbody tr:last-child td { border-block-end: 0; }
 .bt-sub { color: var(--acme-color-text-subtle); }
-.bt-pl { font-weight: 600; }
+.bt-pl { font-weight: 500; }
 .bt-actions { text-align: end; }
 .bt-time { color: var(--acme-color-text-muted); font-variant-numeric: tabular-nums; }
 .bt-empty-card { padding: 0 var(--acme-space-5) var(--acme-space-5); color: var(--acme-color-text-subtle); margin: 0; }
@@ -339,7 +333,7 @@ body { font-size: var(--acme-text-sm); }
   transition: transform var(--acme-duration-slow) var(--acme-ease-out), opacity var(--acme-duration-slow) var(--acme-ease-out);
 }
 .bt-toast.show { transform: translate(-50%, 0); opacity: 1; }
-.bt-toast.error { border-color: var(--acme-color-danger); color: var(--acme-color-danger-soft-text); }
+.bt-toast.error { border-color: var(--acme-color-danger-border); background: var(--acme-color-danger-soft); color: var(--acme-color-danger-soft-text); }
 
 /* ---------- Phone ---------- */
 @media (max-width: 720px) {
