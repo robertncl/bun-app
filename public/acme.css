@@ -1,133 +1,102 @@
 /* ==========================================================================
-   ACME Corp Design Language — app subset for BunTrade
-   Tokens (Oat neutrals, Clay accent, Brick danger, Sky info; light + dark)
-   plus base styles and the components BunTrade uses: wordmark, buttons,
-   forms, card, badge, alert, table, tabs, top bar.
+   ACME Corp Design Language v5 — app subset for BunTrade
+   Tokens (Graphite neutrals, ink primary, Blue interaction, Green / Amber /
+   Red / Blue status, Signal Red brand mark; light theme only) plus base
+   styles and the components BunTrade uses: wordmark, buttons, forms, card,
+   badge, alert, table, tabs, top bar.
    Copied from the ACME Design System (tokens.css + components/bundle.css,
    sections 1–11). Fonts load from Google Fonts in index.html — the CSP only
-   allows fonts.gstatic.com — so the self-hosted @font-face rules are left out.
+   allows fonts.gstatic.com — so the self-hosted @font-face rules and the
+   text-style utility classes are left out.
    ========================================================================== */
 
 :root, [data-theme="light"] {
-  --acme-clay-50: #faf0eb;
-  --acme-clay-100: #f3ddd0;
-  --acme-clay-200: #e9c3af;
-  --acme-clay-300: #dda588;
-  --acme-clay-400: #d18b6a;
-  --acme-clay-500: #b26e52;
-  --acme-clay-600: #94513b;
-  --acme-clay-700: #80432f;
-  --acme-clay-800: #6b3624;
-  --acme-clay-900: #552818;
-  --acme-gray-0: #fcfbf7;
-  --acme-gray-50: #f3f0e7;
-  --acme-gray-100: #e9e4d5;
-  --acme-gray-200: #c4bda4;
-  --acme-gray-300: #a29b89;
-  --acme-gray-400: #7e7764;
-  --acme-gray-500: #696352;
-  --acme-gray-600: #554f41;
-  --acme-gray-700: #433f32;
-  --acme-gray-800: #2f2b21;
-  --acme-gray-900: #1e1b13;
-  --acme-gray-950: #100e08;
-  --acme-red-50: #fbeeec;
-  --acme-red-300: #f3a395;
-  --acme-red-400: #ef7361;
-  --acme-red-500: #ac4334;
-  --acme-red-600: #a82e1e;
-  --acme-red-700: #97291b;
-  --acme-red-800: #7a2116;
-  --acme-sky-50: #edf1f4;
-  --acme-sky-300: #8db0c9;
-  --acme-sky-500: #5c87a6;
-  --acme-sky-600: #3e6b8c;
-  --acme-sky-700: #305875;
-  --acme-sky-800: #274860;
-  --acme-color-canvas: var(--acme-gray-50);
-  --acme-color-surface: var(--acme-gray-100);
+  --acme-gray-0: #FFFFFF;
+  --acme-gray-50: #F8F9FA;
+  --acme-gray-100: #F1F3F5;
+  --acme-gray-200: #E2E5E9;
+  --acme-gray-300: #C8CDD3;
+  --acme-gray-400: #838A94;
+  --acme-gray-500: #676E78;
+  --acme-gray-600: #525961;
+  --acme-gray-700: #3C424A;
+  --acme-gray-800: #272C32;
+  --acme-gray-900: #15181D;
+  --acme-gray-950: #0B0D10;
+  --acme-red-50: #FFF0EE;
+  --acme-red-100: #FFDEDB;
+  --acme-red-200: #FFBDB6;
+  --acme-red-300: #FB8D82;
+  --acme-red-400: #F2594D;
+  --acme-red-500: #E43227;
+  --acme-red-600: #C91C15;
+  --acme-red-700: #A91515;
+  --acme-red-800: #881415;
+  --acme-red-900: #641212;
+  --acme-blue-50: #EEF4FF;
+  --acme-blue-100: #DCE7FF;
+  --acme-blue-200: #BCD0FB;
+  --acme-blue-300: #86ACFA;
+  --acme-blue-500: #2F6BE4;
+  --acme-blue-600: #1F57C9;
+  --acme-blue-700: #1A47A6;
+  --acme-blue-800: #163A85;
+  --acme-green-50: #EBF7F0;
+  --acme-green-200: #B5E2C6;
+  --acme-green-600: #17784D;
+  --acme-green-700: #11643F;
+  --acme-green-800: #0D5034;
+  --acme-amber-50: #FEF6E6;
+  --acme-amber-200: #F6D8A0;
+  --acme-amber-600: #A05A06;
+  --acme-amber-700: #834808;
+  --acme-amber-800: #6A3A0B;
+  --acme-color-canvas: var(--acme-gray-0);
+  --acme-color-surface: var(--acme-gray-50);
+  --acme-color-surface-hover: var(--acme-gray-100);
   --acme-color-surface-raised: var(--acme-gray-0);
   --acme-color-border: var(--acme-gray-200);
+  --acme-color-border-control: var(--acme-gray-300);
   --acme-color-border-strong: var(--acme-gray-400);
   --acme-color-text: var(--acme-gray-900);
   --acme-color-text-muted: var(--acme-gray-600);
   --acme-color-text-subtle: var(--acme-gray-500);
-  --acme-color-primary: var(--acme-clay-600);
-  --acme-color-primary-hover: var(--acme-clay-700);
-  --acme-color-primary-active: var(--acme-clay-800);
+  --acme-color-primary: var(--acme-gray-900);
+  --acme-color-primary-hover: var(--acme-gray-700);
+  --acme-color-primary-active: var(--acme-gray-800);
   --acme-color-on-primary: var(--acme-gray-0);
-  --acme-color-mark: var(--acme-clay-600);
-  --acme-color-accent: var(--acme-clay-700);
-  --acme-color-accent-soft: var(--acme-clay-50);
-  --acme-color-selected: var(--acme-clay-700);
-  --acme-color-selected-soft: var(--acme-clay-50);
-  --acme-color-link: var(--acme-clay-700);
-  --acme-color-link-hover: var(--acme-clay-800);
-  --acme-color-focus: var(--acme-clay-600);
-  --acme-color-success: var(--acme-gray-600);
-  --acme-color-success-soft: var(--acme-gray-100);
-  --acme-color-success-soft-text: var(--acme-gray-800);
-  --acme-color-warning: var(--acme-gray-600);
-  --acme-color-warning-soft: var(--acme-gray-100);
-  --acme-color-warning-soft-text: var(--acme-gray-800);
+  --acme-color-mark: var(--acme-red-600);
+  --acme-color-accent: var(--acme-red-700);
+  --acme-color-accent-soft: var(--acme-red-50);
+  --acme-color-selected: var(--acme-blue-600);
+  --acme-color-selected-soft: var(--acme-blue-50);
+  --acme-color-link: var(--acme-blue-700);
+  --acme-color-link-hover: var(--acme-blue-800);
+  --acme-color-focus: var(--acme-blue-600);
+  --acme-color-success: var(--acme-green-700);
+  --acme-color-success-soft: var(--acme-green-50);
+  --acme-color-success-soft-text: var(--acme-green-800);
+  --acme-color-success-border: var(--acme-green-200);
+  --acme-color-warning: var(--acme-amber-700);
+  --acme-color-warning-soft: var(--acme-amber-50);
+  --acme-color-warning-soft-text: var(--acme-amber-800);
+  --acme-color-warning-border: var(--acme-amber-200);
   --acme-color-danger: var(--acme-red-700);
   --acme-color-danger-emphasis: var(--acme-red-600);
   --acme-color-danger-emphasis-hover: var(--acme-red-700);
-  --acme-color-danger-emphasis-active: var(--acme-red-800);
   --acme-color-danger-soft: var(--acme-red-50);
   --acme-color-danger-soft-text: var(--acme-red-700);
-  --acme-color-info: var(--acme-sky-700);
-  --acme-color-info-soft: var(--acme-sky-50);
-  --acme-color-info-soft-text: var(--acme-sky-800);
+  --acme-color-danger-border: var(--acme-red-200);
+  --acme-color-info: var(--acme-blue-700);
+  --acme-color-info-soft: var(--acme-blue-50);
+  --acme-color-info-soft-text: var(--acme-blue-800);
+  --acme-color-info-border: var(--acme-blue-200);
   --acme-color-data: var(--acme-gray-400);
-  --acme-color-data-highlight: var(--acme-clay-900);
-  --acme-color-scrim: #100e0880;
-  --acme-shadow-sm: 0 1px 2px #1C19110F;
-  --acme-shadow-md: 0 2px 8px -2px #1C191117;
-  --acme-shadow-lg: 0 8px 24px -6px #1C191121;
-}
-[data-theme="dark"] {
-  --acme-color-canvas: var(--acme-gray-950);
-  --acme-color-surface: var(--acme-gray-900);
-  --acme-color-surface-raised: var(--acme-gray-800);
-  --acme-color-border: var(--acme-gray-600);
-  --acme-color-border-strong: var(--acme-gray-400);
-  --acme-color-text: var(--acme-gray-100);
-  --acme-color-text-muted: var(--acme-gray-200);
-  --acme-color-text-subtle: var(--acme-gray-300);
-  --acme-color-primary: var(--acme-clay-600);
-  --acme-color-primary-hover: var(--acme-clay-700);
-  --acme-color-primary-active: var(--acme-clay-800);
-  --acme-color-on-primary: var(--acme-gray-0);
-  --acme-color-mark: var(--acme-clay-600);
-  --acme-color-accent: var(--acme-clay-300);
-  --acme-color-accent-soft: #3d2c20;
-  --acme-color-selected: var(--acme-clay-300);
-  --acme-color-selected-soft: #3a2a1f;
-  --acme-color-link: var(--acme-clay-300);
-  --acme-color-link-hover: var(--acme-clay-200);
-  --acme-color-focus: var(--acme-clay-400);
-  --acme-color-success: var(--acme-gray-300);
-  --acme-color-success-soft: var(--acme-gray-800);
-  --acme-color-success-soft-text: var(--acme-gray-200);
-  --acme-color-warning: var(--acme-gray-300);
-  --acme-color-warning-soft: var(--acme-gray-800);
-  --acme-color-warning-soft-text: var(--acme-gray-200);
-  --acme-color-danger: var(--acme-red-400);
-  --acme-color-danger-emphasis: var(--acme-red-500);
-  --acme-color-danger-emphasis-hover: var(--acme-red-600);
-  --acme-color-danger-emphasis-active: var(--acme-red-700);
-  --acme-color-danger-soft: #38241a;
-  --acme-color-danger-soft-text: var(--acme-red-300);
-  --acme-color-info: var(--acme-sky-300);
-  --acme-color-info-soft: #2a2f2d;
-  --acme-color-info-soft-text: var(--acme-sky-300);
-  --acme-color-data: var(--acme-gray-400);
-  --acme-color-data-highlight: var(--acme-clay-200);
-  --acme-color-scrim: #100e0880;
-  --acme-shadow-sm: 0 1px 2px #00000059;
-  --acme-shadow-md: 0 2px 8px -2px #00000073;
-  --acme-shadow-lg: 0 8px 24px -6px #0000008C;
+  --acme-color-data-highlight: var(--acme-blue-600);
+  --acme-color-scrim: #0B0D1073;
+  --acme-shadow-sm: 0 1px 2px #1018280D;
+  --acme-shadow-md: 0 4px 12px -2px #10182814;
+  --acme-shadow-lg: 0 16px 40px -8px #1018282E;
 }
 :root {
   --acme-space-1: 0.25rem;
@@ -143,12 +112,12 @@
   --acme-space-20: 5rem;
   --acme-space-24: 6rem;
   --acme-radius-sm: 4px;
-  --acme-radius-md: 8px;
-  --acme-radius-lg: 12px;
-  --acme-radius-xl: 16px;
+  --acme-radius-md: 6px;
+  --acme-radius-lg: 10px;
+  --acme-radius-xl: 12px;
   --acme-radius-full: 999px;
-  --font-sans: "Styrene B", "Inter", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Tiempos Headline", "Copernicus", "Source Serif 4", Georgia, "Times New Roman", ui-serif, serif;
+  --font-sans: "Inter", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Inter", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
@@ -158,9 +127,10 @@
 :root {
   color-scheme: light;
 
-  /* Font stacks come from tokens.json type.families */
+  /* Font stacks come from tokens.json type.families. One family (Inter):
+     --acme-font-display is kept as an alias of the sans stack. */
   --acme-font-sans: var(--font-sans);
-  --acme-font-display: var(--font-display);
+  --acme-font-display: var(--acme-font-sans);
   --acme-font-mono: var(--font-mono);
   --acme-text-xs: 0.75rem;
   --acme-text-sm: 0.875rem;
@@ -175,6 +145,9 @@
   --acme-leading-snug: 1.35;
   --acme-leading-normal: 1.5;
   --acme-leading-relaxed: 1.65;
+  --acme-tracking-tight: -0.02em;
+  --acme-tracking-snug: -0.011em;
+  --acme-tracking-caps: 0.06em;
 
   /* Motion — calm and precise; nothing overshoots */
   --acme-duration-fast: 100ms;
@@ -184,15 +157,12 @@
   --acme-ease-out: cubic-bezier(0.2, 0.8, 0.4, 1);
   --acme-ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
 
-  /* Selection is orientation, not action — checked controls are Clay. */
+  /* Checked controls take the interaction blue. */
   accent-color: var(--acme-color-selected);
 }
-/* Themes: tokens.css switches on data-theme="light" | "dark" on <html>.
-   To follow the OS, set it once at load:
-   document.documentElement.dataset.theme =
-     matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; */
-[data-theme="dark"] { color-scheme: dark; }
-[data-theme="light"] { color-scheme: light; }
+/* Light theme only, like the source: no dark theme, no data-theme switch.
+   The one dark surface is the deck bookend (.acme-slide--dark), which pins
+   its own colours. */
 
 /* --------------------------------------------------------------------------
    2. Base
@@ -207,25 +177,28 @@ body {
   color: var(--acme-color-text);
   background: var(--acme-color-canvas);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--acme-font-display);
   line-height: var(--acme-leading-tight);
   margin: 0 0 var(--acme-space-3);
-  font-weight: 700;
+  font-weight: 600;
+  text-wrap: balance;
 }
-h1 { font-size: var(--acme-text-4xl); letter-spacing: -0.015em; }
-h2 { font-size: var(--acme-text-3xl); letter-spacing: -0.01em; }
-h3 { font-size: var(--acme-text-xl); }
-h4 { font-size: var(--acme-text-lg); }
+h1 { font-size: var(--acme-text-4xl); letter-spacing: var(--acme-tracking-tight); }
+h2 { font-size: var(--acme-text-3xl); letter-spacing: var(--acme-tracking-tight); }
+h3 { font-size: var(--acme-text-xl); letter-spacing: var(--acme-tracking-snug); }
+h4 { font-size: var(--acme-text-lg); letter-spacing: var(--acme-tracking-snug); }
 
-p { margin: 0 0 var(--acme-space-4); }
+p { margin: 0 0 var(--acme-space-4); text-wrap: pretty; }
 
 a {
   color: var(--acme-color-link);
   text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
   transition: color var(--acme-duration-fast) var(--acme-ease-out);
 }
 a:hover { color: var(--acme-color-link-hover); }
@@ -253,10 +226,10 @@ code, pre {
 .acme-wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 0.45em;
+  gap: 0.5em;
   font-family: var(--acme-font-sans);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--acme-color-text);
   text-decoration: none;
@@ -266,16 +239,16 @@ code, pre {
   place-items: center;
   inline-size: 1.6em;
   block-size: 1.6em;
-  border-radius: var(--acme-radius-sm);
+  border-radius: 0.3em;
   background: var(--acme-color-mark);
   color: var(--acme-color-on-primary);
-  font-style: italic;
   letter-spacing: 0;
 }
-/* On a dark ground inside a light page (footers, dark slides): warm-white
-   letters, and the mark lifts to clay-500 so it clears 3:1 against Oat 900. */
+/* On a dark ground inside a light page (footers, dark slides): white
+   letters, and the mark lifts to red-500 so it stays a bright 3:1+ shape
+   against Graphite 950 (4.4:1). */
 .acme-wordmark--on-dark { color: var(--acme-gray-0); }
-.acme-wordmark--on-dark .acme-wordmark__mark { background: var(--acme-clay-500); }
+.acme-wordmark--on-dark .acme-wordmark__mark { background: var(--acme-red-500); }
 
 /* --------------------------------------------------------------------------
    4. Buttons
@@ -289,9 +262,11 @@ code, pre {
   padding: 0 var(--acme-space-4);
   border: 1px solid transparent;
   border-radius: var(--acme-radius-md);
-  font: 600 var(--acme-text-sm) / 1 var(--acme-font-sans);
+  font: 500 var(--acme-text-sm) / 1 var(--acme-font-sans);
+  letter-spacing: var(--acme-tracking-snug);
   color: var(--acme-color-text);
   background: transparent;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color var(--acme-duration-base) var(--acme-ease-out),
@@ -302,31 +277,33 @@ code, pre {
 .acme-btn--primary {
   background: var(--acme-color-primary);
   color: var(--acme-color-on-primary);
+  box-shadow: var(--acme-shadow-sm);
 }
 .acme-btn--primary:hover { background: var(--acme-color-primary-hover); }
 .acme-btn--primary:active { background: var(--acme-color-primary-active); }
 .acme-btn--secondary {
   background: var(--acme-color-surface-raised);
-  border-color: var(--acme-color-border-strong);
+  border-color: var(--acme-color-border-control);
   box-shadow: var(--acme-shadow-sm);
 }
-.acme-btn--secondary:hover { background: var(--acme-color-surface); }
-.acme-btn--secondary:active { border-color: var(--acme-color-text-subtle); }
+.acme-btn--secondary:hover { background: var(--acme-color-surface); border-color: var(--acme-color-border-strong); }
+.acme-btn--secondary:active { background: var(--acme-color-surface-hover); }
 .acme-btn--ghost { color: var(--acme-color-text-muted); }
 .acme-btn--ghost:hover {
-  background: var(--acme-color-surface);
+  background: var(--acme-color-surface-hover);
   color: var(--acme-color-text);
 }
 .acme-btn--danger {
   background: var(--acme-color-danger-emphasis);
   color: var(--acme-color-on-primary);
+  box-shadow: var(--acme-shadow-sm);
 }
 .acme-btn--danger:hover { background: var(--acme-color-danger-emphasis-hover); }
-.acme-btn--danger:active { background: var(--acme-color-danger-emphasis-active); }
 .acme-btn--sm { min-height: 2rem; padding: 0 var(--acme-space-3); font-size: var(--acme-text-xs); }
 .acme-btn--lg { min-height: 3rem; padding: 0 var(--acme-space-5); font-size: var(--acme-text-md); }
 .acme-btn--icon { inline-size: 2rem; padding: 0; }
-/* Disabled: readable, not faded — surface fill, subtle ink (4.5:1+), no shadow. */
+/* Disabled: readable, not faded — surface fill, subtle ink (4.9:1), no shadow.
+   Local deviation: the repo fades to 45% opacity. */
 .acme-btn:disabled,
 .acme-btn:disabled:hover,
 .acme-btn:disabled:active {
@@ -340,10 +317,10 @@ code, pre {
 /* --------------------------------------------------------------------------
    5. Forms
    -------------------------------------------------------------------------- */
-.acme-field { display: grid; gap: var(--acme-space-1); }
+.acme-field { display: grid; gap: var(--acme-space-2); }
 .acme-label {
   font-size: var(--acme-text-sm);
-  font-weight: 600;
+  font-weight: 500;
 }
 .acme-label__optional {
   font-weight: 400;
@@ -357,18 +334,20 @@ code, pre {
   font: 400 var(--acme-text-sm) / var(--acme-leading-normal) var(--acme-font-sans);
   color: var(--acme-color-text);
   background: var(--acme-color-surface-raised);
+  box-shadow: var(--acme-shadow-sm);
   transition: border-color var(--acme-duration-base) var(--acme-ease-out);
 }
 textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-height: 5rem; resize: vertical; }
 .acme-input:hover { border-color: var(--acme-color-text-subtle); }
 .acme-input::placeholder { color: var(--acme-color-text-subtle); }
 .acme-input[aria-invalid="true"] { border-color: var(--acme-color-danger); }
-.acme-input:disabled { background: var(--acme-color-surface); border-color: var(--acme-color-border); color: var(--acme-color-text-subtle); cursor: not-allowed; }
-.acme-help { font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); }
+.acme-input:disabled { background: var(--acme-color-surface); border-color: var(--acme-color-border); color: var(--acme-color-text-subtle); box-shadow: none; cursor: not-allowed; }
+.acme-help { font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); margin: 0; }
 .acme-error {
   font-size: var(--acme-text-xs);
   font-weight: 500;
   color: var(--acme-color-danger);
+  margin: 0;
 }
 
 .acme-choice {
@@ -378,8 +357,8 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
   font-size: var(--acme-text-sm);
 }
 .acme-choice input {
-  inline-size: 1.125rem;
-  block-size: 1.125rem;
+  inline-size: 1rem;
+  block-size: 1rem;
   margin: 0.125rem 0 0;
   flex: none;
 }
@@ -393,8 +372,8 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
 .acme-switch input {
   appearance: none;
   position: relative;
-  inline-size: 2.5rem;
-  block-size: 1.5rem;
+  inline-size: 2.25rem;
+  block-size: 1.25rem;
   flex: none;
   margin: 0;
   border: none;
@@ -408,8 +387,8 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
   position: absolute;
   inset-block-start: 2px;
   inset-inline-start: 2px;
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
+  inline-size: 1rem;
+  block-size: 1rem;
   border-radius: var(--acme-radius-full);
   background: var(--acme-gray-0);
   box-shadow: var(--acme-shadow-sm);
@@ -436,24 +415,31 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
     box-shadow var(--acme-duration-base) var(--acme-ease-out);
 }
 .acme-card--interactive:hover {
-  border-color: var(--acme-color-border-strong);
+  border-color: var(--acme-color-border-control);
   box-shadow: var(--acme-shadow-md);
 }
 .acme-card__media {
   aspect-ratio: 16 / 9;
   background: var(--acme-color-surface);
+  border-block-end: 1px solid var(--acme-color-border);
   display: grid;
   place-items: center;
   color: var(--acme-color-text-subtle);
 }
 .acme-card__body { padding: var(--acme-space-5); flex: 1; }
-.acme-card__title { font-size: var(--acme-text-lg); margin-block-end: var(--acme-space-1); }
+.acme-card__title {
+  font-size: var(--acme-text-md);
+  font-weight: 600;
+  letter-spacing: var(--acme-tracking-snug);
+  margin-block-end: var(--acme-space-1);
+}
 .acme-card__footer {
   display: flex;
   align-items: center;
   gap: var(--acme-space-2);
-  padding: var(--acme-space-4) var(--acme-space-5);
+  padding: var(--acme-space-3) var(--acme-space-5);
   border-block-start: 1px solid var(--acme-color-border);
+  background: var(--acme-color-surface);
 }
 
 /* --------------------------------------------------------------------------
@@ -463,41 +449,43 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
   display: inline-flex;
   align-items: center;
   gap: var(--acme-space-1);
-  padding: 0.125rem var(--acme-space-2);
-  border-radius: var(--acme-radius-full);
-  font: 600 var(--acme-text-xs) / var(--acme-leading-normal) var(--acme-font-sans);
-  background: var(--acme-color-surface);
+  padding: 0.0625rem var(--acme-space-2);
+  border: 1px solid var(--acme-color-border);
+  border-radius: var(--acme-radius-sm);
+  font: 500 var(--acme-text-xs) / var(--acme-leading-normal) var(--acme-font-sans);
+  white-space: nowrap;
+  background: var(--acme-color-surface-hover);
   color: var(--acme-color-text-muted);
 }
 .acme-status-icon { flex: none; }
-.acme-badge--success { background: var(--acme-color-success-soft); color: var(--acme-color-success-soft-text); }
-.acme-badge--warning { background: var(--acme-color-warning-soft); color: var(--acme-color-warning-soft-text); }
-.acme-badge--danger  { background: var(--acme-color-danger-soft);  color: var(--acme-color-danger-soft-text); }
-.acme-badge--info    { background: var(--acme-color-info-soft);    color: var(--acme-color-info-soft-text); }
+.acme-badge--success { background: var(--acme-color-success-soft); color: var(--acme-color-success-soft-text); border-color: var(--acme-color-success-border); }
+.acme-badge--warning { background: var(--acme-color-warning-soft); color: var(--acme-color-warning-soft-text); border-color: var(--acme-color-warning-border); }
+.acme-badge--danger  { background: var(--acme-color-danger-soft);  color: var(--acme-color-danger-soft-text);  border-color: var(--acme-color-danger-border); }
+.acme-badge--info    { background: var(--acme-color-info-soft);    color: var(--acme-color-info-soft-text);    border-color: var(--acme-color-info-border); }
 
 /* --------------------------------------------------------------------------
    8. Alert
    -------------------------------------------------------------------------- */
+/* Tinted panel with a matching hairline; the leading icon takes the status
+   hue, the title stays in ink. */
 .acme-alert {
   display: flex;
   gap: var(--acme-space-3);
   padding: var(--acme-space-4);
-  border: 1px solid var(--acme-color-border);
-  border-inline-start: 3px solid var(--acme-color-info);
-  border-radius: var(--acme-radius-md);
+  border: 1px solid var(--acme-color-info-border);
+  border-radius: var(--acme-radius-lg);
   background: var(--acme-color-info-soft);
   font-size: var(--acme-text-sm);
+  --acme-alert-icon: var(--acme-color-info);
 }
-.acme-alert__icon { display: flex; padding-block-start: 0.125rem; color: var(--acme-color-info); }
-.acme-alert--success .acme-alert__icon { color: var(--acme-color-success); }
-.acme-alert--warning .acme-alert__icon { color: var(--acme-color-warning); }
-.acme-alert--danger .acme-alert__icon { color: var(--acme-color-danger); }
-.acme-alert__title { font-weight: 700; margin-block-end: var(--acme-space-1); }
-.acme-alert p:last-child { margin: 0; }
-.acme-alert--info    { border-inline-start-color: var(--acme-color-info);    background: var(--acme-color-info-soft); }
-.acme-alert--success { border-inline-start-color: var(--acme-color-success); background: var(--acme-color-success-soft); }
-.acme-alert--warning { border-inline-start-color: var(--acme-color-warning); background: var(--acme-color-warning-soft); }
-.acme-alert--danger  { border-inline-start-color: var(--acme-color-danger);  background: var(--acme-color-danger-soft); }
+.acme-alert > svg:first-child,
+.acme-alert__icon { display: flex; color: var(--acme-alert-icon); flex: none; margin-block-start: 0.0625rem; }
+.acme-alert__title { font-weight: 600; margin-block-end: var(--acme-space-1); }
+.acme-alert p { margin: 0; }
+.acme-alert p + p { margin-block-start: var(--acme-space-1); color: var(--acme-color-text-muted); }
+.acme-alert--success { border-color: var(--acme-color-success-border); background: var(--acme-color-success-soft); --acme-alert-icon: var(--acme-color-success); }
+.acme-alert--warning { border-color: var(--acme-color-warning-border); background: var(--acme-color-warning-soft); --acme-alert-icon: var(--acme-color-warning); }
+.acme-alert--danger  { border-color: var(--acme-color-danger-border);  background: var(--acme-color-danger-soft);  --acme-alert-icon: var(--acme-color-danger); }
 
 /* --------------------------------------------------------------------------
    9. Table
@@ -510,24 +498,26 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
 .acme-table th {
   text-align: start;
   font-size: var(--acme-text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 500;
   color: var(--acme-color-text-muted);
   padding: var(--acme-space-2) var(--acme-space-3);
-  border-block-end: 1px solid var(--acme-color-border-strong);
+  background: var(--acme-color-surface);
+  border-block: 1px solid var(--acme-color-border);
+  white-space: nowrap;
 }
 .acme-table td {
   padding: var(--acme-space-3);
   border-block-end: 1px solid var(--acme-color-border);
 }
+.acme-table tbody tr { transition: background-color var(--acme-duration-fast) var(--acme-ease-out); }
 .acme-table tbody tr:hover { background: var(--acme-color-surface); }
 .acme-table .acme-table__num { text-align: end; font-variant-numeric: tabular-nums; }
 
-/* Clay marks orientation: which column orders the data, which rows are held */
+/* The sorted column header steps up to ink; the arrow glyph in the markup
+   carries the direction. Selected rows take the interaction tint. */
 .acme-table th:is([aria-sort="ascending"], [aria-sort="descending"]) {
-  color: var(--acme-color-selected);
-  border-block-end-color: var(--acme-color-selected);
+  color: var(--acme-color-text);
+  font-weight: 600;
 }
 .acme-table tbody tr[aria-selected="true"],
 .acme-table tbody tr[aria-selected="true"]:hover {
@@ -538,14 +528,14 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
    10. Tabs
    -------------------------------------------------------------------------- */
 /* Underline tabs: a hairline baseline across the set; the selected tab
-   carries a 2 px Clay indicator that sits on the baseline. */
+   carries a 2 px ink indicator that sits on the baseline. */
 .acme-tabs {
   display: flex;
-  gap: var(--acme-space-2);
+  gap: var(--acme-space-4);
   border-block-end: 1px solid var(--acme-color-border);
 }
 .acme-tab {
-  padding: var(--acme-space-2) var(--acme-space-3);
+  padding: var(--acme-space-2) 0;
   border: none;
   border-block-end: 2px solid transparent;
   margin-block-end: -1px;
@@ -558,12 +548,18 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
     color var(--acme-duration-base) var(--acme-ease-out);
 }
 .acme-tab:hover { color: var(--acme-color-text); }
-.acme-tab__count { margin-inline-start: var(--acme-space-1); color: var(--acme-color-text-subtle); font-variant-numeric: tabular-nums; }
-.acme-tab[aria-selected="true"] .acme-tab__count { color: inherit; }
 .acme-tab[aria-selected="true"] {
-  border-block-end-color: var(--acme-color-selected);
-  color: var(--acme-color-selected);
-  font-weight: 600;
+  border-block-end-color: var(--acme-color-text);
+  color: var(--acme-color-text);
+}
+.acme-tab__count {
+  margin-inline-start: var(--acme-space-1);
+  padding: 0 0.375rem;
+  border-radius: var(--acme-radius-full);
+  background: var(--acme-color-surface-hover);
+  font-size: var(--acme-text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--acme-color-text-muted);
 }
 
 /* --------------------------------------------------------------------------
@@ -575,15 +571,17 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
   display: flex;
   align-items: center;
   gap: var(--acme-space-6);
-  padding: var(--acme-space-3) var(--acme-space-5);
+  min-block-size: 3.5rem;
+  padding: var(--acme-space-2) var(--acme-space-5);
   background: var(--acme-color-canvas);
   border-block-end: 1px solid var(--acme-color-border);
   color: var(--acme-color-text);
 }
-.acme-topbar__nav { display: flex; gap: var(--acme-space-1); margin-inline-start: auto; }
+.acme-topbar__nav { display: flex; gap: var(--acme-space-1); }
+.acme-topbar__actions { display: flex; align-items: center; gap: var(--acme-space-2); margin-inline-start: auto; }
 .acme-topbar__link {
   padding: var(--acme-space-1) var(--acme-space-3);
-  border-radius: var(--acme-radius-sm);
+  border-radius: var(--acme-radius-md);
   color: var(--acme-color-text-muted);
   font-size: var(--acme-text-sm);
   font-weight: 500;
@@ -594,9 +592,8 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
 }
 .acme-topbar__link:hover { color: var(--acme-color-text); background: var(--acme-color-surface); }
 .acme-topbar__link[aria-current="page"] {
-  background: var(--acme-color-selected-soft);
-  color: var(--acme-color-selected);
-  font-weight: 600;
+  background: var(--acme-color-surface-hover);
+  color: var(--acme-color-text);
 }
 
 .acme-breadcrumbs {
@@ -607,6 +604,6 @@ textarea.acme-input { padding: var(--acme-space-2) var(--acme-space-3); min-heig
   color: var(--acme-color-text-subtle);
 }
 .acme-breadcrumbs a { color: var(--acme-color-text-muted); text-decoration: none; }
-.acme-breadcrumbs a:hover { text-decoration: underline; }
+.acme-breadcrumbs a:hover { color: var(--acme-color-text); text-decoration: underline; }
 .acme-breadcrumbs [aria-current="page"] { color: var(--acme-color-text); font-weight: 500; }
 

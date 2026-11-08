@@ -3,12 +3,14 @@
 // and order history tables. Polls the simulated market every couple of
 // seconds and re-renders.
 //
-// Color convention (ACME design language): gains and flat values use muted
-// ink, only losses get --acme-color-danger — there is no "success green".
-// Clay marks the one primary action (the place-order button) and
-// orientation: the current nav link, the selected market row, the selected
-// side. Sparklines and the price line are neutral; the last-price dot and
-// label use --acme-color-data-highlight as the chart's single takeaway.
+// Color convention (ACME design language v5): every colour has one job.
+// Ink (Graphite 900) fills the one primary action, the place-order button.
+// Blue is interaction: the selected market row, the selected side, the chart's
+// price line and last-price label (--acme-color-data-highlight). Gains read in
+// --acme-color-success-soft-text, losses in --acme-color-danger-soft-text, and
+// every P&L carries its sign, so direction never rests on hue alone. Red is
+// never put on a control unless the action is destructive. Sparklines are
+// neutral Graphite (--acme-color-data).
 //
 // The ticket is rendered once per symbol/side and then updated in place, so
 // typing a quantity never loses focus to the 2-second refresh.
@@ -32,7 +34,7 @@ let assetFilter = "all";
 let ticketKey = "";        // symbol|side|locale|currency the ticket markup was built for
 
 // --- formatting helpers ---------------------------------------------------
-const downClass = (n) => (n < 0 ? " down" : "");
+const plClass = (n) => (n < 0 ? " down" : n > 0 ? " up" : "");
 const isFuture = (s) => s && s.kind === "future";
 const isPoints = (s) => isFuture(s) && s.unit === "index";
 // Everything interpolated into innerHTML is escaped, server data included:
@@ -114,7 +116,7 @@ function chartSVG(s) {
     <line x1="0" y1="250" x2="690" y2="250" stroke="var(--acme-color-border-strong)"/>
     <line x1="0" y1="${openY.toFixed(1)}" x2="${W}" y2="${openY.toFixed(1)}" stroke="var(--acme-color-data)" stroke-dasharray="4 4"/>
     <text x="4" y="${(openY - 6).toFixed(1)}" font-size="11" fill="var(--acme-color-text-subtle)" font-family="var(--acme-font-sans)">${th("chart.open", { price: quote(s, s.open) })}</text>
-    <polyline points="${line}" fill="none" stroke="var(--acme-color-text)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <polyline points="${line}" fill="none" stroke="var(--acme-color-data-highlight)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
     <circle cx="${W}" cy="${lastY.toFixed(1)}" r="4" fill="var(--acme-color-data-highlight)"/>
     <text x="${W + 8}" y="${(lastY + 4).toFixed(1)}" font-size="12" font-weight="600" fill="var(--acme-color-data-highlight)" font-family="var(--acme-font-sans)">${esc(quote(s, s.price))}</text>
   </svg>`;
@@ -177,14 +179,14 @@ function renderHeader() {
     <div class="bt-stat bt-stat--lead">
       <div class="label-caps">${th("summary.equity")}</div>
       <div class="bt-stat__value num">${fmt.money(portfolio.equity)}</div>
-      <div class="bt-stat__sub num${downClass(portfolio.totalPL)}">${th("summary.sinceStart", {
+      <div class="bt-stat__sub num${plClass(portfolio.totalPL)}">${th("summary.sinceStart", {
         amount: fmt.money(portfolio.totalPL, { signed: true }), pct: fmt.pct(portfolio.totalPLPct) })}</div>
     </div>
     ${stat("summary.cash", fmt.money(portfolio.cash))}
     ${stat("summary.spot", fmt.money(portfolio.marketValue))}
     ${stat("summary.margin", fmt.money(portfolio.marginUsed))}
-    ${stat("summary.openPL", fmt.money(openPL, { signed: true }), downClass(openPL))}
-    ${stat("summary.realizedPL", fmt.money(portfolio.realizedPL, { signed: true }), downClass(portfolio.realizedPL))}`;
+    ${stat("summary.openPL", fmt.money(openPL, { signed: true }), plClass(openPL))}
+    ${stat("summary.realizedPL", fmt.money(portfolio.realizedPL, { signed: true }), plClass(portfolio.realizedPL))}`;
   fitStatValues($("trade"));
   renderFooter();
 }
@@ -238,7 +240,7 @@ function rowHTML(s) {
     <td class="bt-col-spark">${sparkSVG(s.spark)}</td>
     <td class="acme-table__num">
       <div class="bt-price">${quote(s, s.price)}</div>
-      <div class="bt-chg${downClass(s.changePct)}">${fmt.pct(s.changePct)}</div>
+      <div class="bt-chg${plClass(s.changePct)}">${fmt.pct(s.changePct)}</div>
     </td>
   </tr>`;
 }
@@ -289,7 +291,7 @@ function renderChart() {
       </div>
       <div class="bt-chart__quote">
         <div class="bt-chart__price num">${quote(s, s.price, { withSymbol: true })}</div>
-        <div class="bt-chart__chg num${downClass(s.change)}">${th("chart.today", {
+        <div class="bt-chart__chg num${plClass(s.change)}">${th("chart.today", {
           change: quote(s, s.change, { signed: true }), pct: fmt.pct(s.changePct) })}</div>
       </div>
     </div>
@@ -517,7 +519,7 @@ function renderPortfolio() {
     <td class="acme-table__num">${quote(r.inst, r.mark)}</td>
     <td class="acme-table__num">${r.value}</td>
     <td class="acme-table__num">${r.lev}</td>
-    <td class="acme-table__num bt-pl${downClass(r.pl)}">${fmt.money(r.pl, { signed: true })}</td>
+    <td class="acme-table__num bt-pl${plClass(r.pl)}">${fmt.money(r.pl, { signed: true })}</td>
     <td class="bt-actions"><button type="button" class="acme-btn acme-btn--ghost acme-btn--sm" data-close="${esc(r.symbol)}" data-kind="${esc(r.kind)}">${th("side.close")}</button></td>
   </tr>`;
 
@@ -556,7 +558,7 @@ function orderRow(o) {
   if (o.kind === "future") {
     label = sideLabel(o.action === "close" ? "close" : o.direction);
     total = o.action === "close"
-      ? `<span class="${downClass(o.realizedPL).trim()}">${th("orders.realized", { amount: fmt.money(o.realizedPL, { signed: true }) })}</span>`
+      ? `<span class="${plClass(o.realizedPL).trim()}">${th("orders.realized", { amount: fmt.money(o.realizedPL, { signed: true }) })}</span>`
       : th("positions.margin", { amount: fmt.money(o.margin) });
   } else {
     label = sideLabel(o.side);
@@ -630,8 +632,6 @@ async function refresh() {
 }
 
 async function init() {
-  document.documentElement.dataset.theme =
-    matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   await initI18n();
   applyStaticText();
   renderPrefs();
