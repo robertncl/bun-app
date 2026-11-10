@@ -63,17 +63,31 @@
         </div>
       </section>
 
-      <section class="acme-card bt-card bt-chart" id="chart-card" aria-live="off" aria-labelledby="chart-h"></section>
+      <div class="bt-trade-main">
+        <section class="acme-card bt-card bt-chart" id="chart-card" aria-live="off" aria-labelledby="chart-h"></section>
 
-      <section class="acme-card bt-card bt-ticket" id="trade-card" aria-labelledby="ticket-h"></section>
+        <div class="bt-trade-sub">
+          <section class="acme-card bt-card bt-ticket" id="trade-card" aria-labelledby="ticket-h"></section>
+          <section class="acme-card bt-card bt-holding" id="holding-card" aria-labelledby="holding-h"></section>
+        </div>
+      </div>
     </div>
 
-    <section id="portfolio" class="acme-card bt-card bt-table-card" aria-labelledby="pos-h">
+    <section id="portfolio" class="acme-card bt-card bt-table-card" aria-labelledby="spot-h">
       <div class="bt-card-head bt-table-card__head">
-        <h2 id="pos-h" class="bt-card-title" data-i18n="positions.title">Open positions</h2>
-        <span class="bt-card-meta" id="pf-meta"></span>
+        <h2 id="spot-h" class="bt-card-title" data-i18n="summary.spot">Spot holdings</h2>
+        <span class="bt-card-meta" id="spot-meta"></span>
       </div>
-      <div id="portfolio-body"></div>
+      <div id="spot-body"></div>
+    </section>
+
+    <section id="futures" class="acme-card bt-card bt-table-card" aria-labelledby="fut-h">
+      <div class="bt-card-head bt-table-card__head">
+        <h2 id="fut-h" class="bt-card-title" data-i18n="positions.futuresTitle">Futures positions</h2>
+        <span class="bt-card-meta" id="fut-meta"></span>
+      </div>
+      <div id="futures-body"></div>
+      <p class="bt-card-note" data-i18n="positions.futuresNote">Futures are cash-settled. Leverage is 1 ÷ margin rate; only margin leaves your cash.</p>
     </section>
 
     <section id="orders" class="acme-card bt-card bt-table-card" aria-labelledby="ord-h">

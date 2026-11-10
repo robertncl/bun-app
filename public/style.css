@@ -1,6 +1,8 @@
-/* BunTrade app styles — a desktop trading dashboard (app bar, account
-   summary, markets · chart · ticket row, positions and order history tables)
-   that stacks into a single column on phones. Built on the ACME design
+/* BunTrade app styles — the "Bun App Redesign" canvas: app bar, account
+   summary tiles, markets beside a column of chart then ticket + "your
+   position", then spot holdings, futures positions and order history
+   tables. Stacks into a single column on phones (chart, ticket, position,
+   markets). Built on the ACME design
    language v5 (acme.css): white Graphite surfaces with hairlines, ink for the
    one primary action, Blue for interaction (selected market, selected side,
    the chart's price line), Green for gains and Red for losses — always with
@@ -20,13 +22,6 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
-}
-.label-caps {
-  font-size: var(--acme-text-xs);
-  font-weight: 600;
-  letter-spacing: var(--acme-tracking-caps);
-  text-transform: uppercase;
-  color: var(--acme-color-text-muted);
 }
 
 body { font-size: var(--acme-text-sm); }
@@ -79,38 +74,46 @@ body { font-size: var(--acme-text-sm); }
 
 /* ---------- Page ---------- */
 .bt-main {
-  max-width: 1360px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: var(--acme-space-6);
+  padding: var(--acme-space-8) var(--acme-space-6) var(--acme-space-12);
   display: flex;
   flex-direction: column;
-  gap: var(--acme-space-6);
+  gap: var(--acme-space-8);
 }
 .bt-main > section { scroll-margin-top: 72px; }
 
 /* ---------- Account summary ---------- */
 .bt-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1px;
-  background: var(--acme-color-border);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--acme-space-4);
+}
+.bt-stat {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--acme-space-1);
+  padding: var(--acme-space-4) var(--acme-space-5);
+  background: var(--acme-color-surface-raised);
   border: 1px solid var(--acme-color-border);
   border-radius: var(--acme-radius-lg);
-  overflow: hidden;
   box-shadow: var(--acme-shadow-sm);
 }
-.bt-stat { background: var(--acme-color-surface-raised); padding: var(--acme-space-4) var(--acme-space-5); }
+.bt-stat__label { font-size: var(--acme-text-xs); font-weight: 500; color: var(--acme-color-text-muted); }
 /* Amounts never wrap mid-number ("+" / "₹2,38,235.76"); fitStatValues() in
    app.js shrinks the rare long one (IDR, KRW) to fit its tile instead. */
-.bt-stat__value { font-size: var(--acme-text-xl); font-weight: 600; margin-top: 6px; white-space: nowrap; }
-.bt-stat--lead .bt-stat__value {
-  margin-top: 0;
-  font-size: var(--acme-text-3xl);
+.bt-stat__value {
+  font-size: var(--acme-text-2xl);
   font-weight: 600;
   letter-spacing: var(--acme-tracking-tight);
-  line-height: 1.2;
+  line-height: var(--acme-leading-tight);
+  white-space: nowrap;
+  /* overflow: hidden makes scrollWidth count overflow on the start side too,
+     so fitStatValues() also catches it in right-to-left layouts. */
+  overflow: hidden;
 }
-.bt-stat__sub { font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); }
+.bt-stat__sub { font-size: var(--acme-text-xs); color: var(--acme-color-text-subtle); font-variant-numeric: tabular-nums; }
 
 /* ---------- Cards ---------- */
 .bt-card { background: var(--acme-color-surface-raised); box-shadow: var(--acme-shadow-sm); }
@@ -122,7 +125,15 @@ body { font-size: var(--acme-text-sm); }
   gap: var(--acme-space-2);
 }
 .bt-card-title { margin: 0; font-size: var(--acme-text-md); letter-spacing: var(--acme-tracking-snug); }
-.bt-card-meta { font-size: var(--acme-text-xs); color: var(--acme-color-text-subtle); }
+.bt-card-meta { font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); }
+.bt-card-note {
+  margin: 0;
+  padding: var(--acme-space-3) var(--acme-space-5);
+  background: var(--acme-color-surface);
+  border-top: 1px solid var(--acme-color-border);
+  font-size: var(--acme-text-xs);
+  color: var(--acme-color-text-muted);
+}
 
 .bt-trade-row {
   display: flex;
@@ -130,9 +141,22 @@ body { font-size: var(--acme-text-sm); }
   gap: var(--acme-space-6);
   align-items: flex-start;
 }
+.bt-trade-main {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--acme-space-6);
+}
+.bt-trade-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--acme-space-6);
+  align-items: flex-start;
+}
 
 /* ---------- Markets ---------- */
-.bt-markets { flex: 1 1 380px; min-width: 0; overflow: hidden; }
+.bt-markets { flex: 1 1 360px; min-width: 0; overflow: hidden; }
 .bt-markets__head {
   padding: var(--acme-space-5) var(--acme-space-5) 0;
   display: flex;
@@ -142,7 +166,7 @@ body { font-size: var(--acme-text-sm); }
 .bt-markets .acme-input { width: 100%; }
 .bt-asset-tabs { gap: 0; overflow-x: auto; scrollbar-width: none; }
 .bt-asset-tabs::-webkit-scrollbar { display: none; }
-.bt-asset-tabs .acme-tab { white-space: nowrap; min-height: 44px; padding-inline: var(--acme-space-2); }
+.bt-asset-tabs .acme-tab { white-space: nowrap; min-height: 44px; padding-inline: 6px; }
 
 .bt-market-scroll { max-height: 640px; overflow-y: auto; }
 .bt-market-table { table-layout: fixed; }
@@ -182,28 +206,22 @@ body { font-size: var(--acme-text-sm); }
 
 /* ---------- Chart ---------- */
 .bt-chart {
-  flex: 999 1 560px;
-  min-width: 0;
   padding: var(--acme-space-5);
-  gap: var(--acme-space-5);
-}
-.bt-chart__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
   gap: var(--acme-space-4);
 }
-.bt-chart__sym { display: flex; align-items: center; gap: var(--acme-space-2); }
-.bt-chart__name { margin: var(--acme-space-1) 0 0; font-size: var(--acme-text-2xl); letter-spacing: var(--acme-tracking-tight); }
-.bt-chart__quote { text-align: end; }
+.bt-chart__head { display: flex; flex-direction: column; gap: var(--acme-space-1); }
+.bt-chart__sym { display: flex; flex-wrap: wrap; align-items: center; gap: var(--acme-space-2); }
+.bt-chart__title { margin: 0; font-size: var(--acme-text-md); font-weight: 600; }
+.bt-chart__title .mono { font-size: var(--acme-text-md); }
+.bt-chart__name { margin-inline-start: var(--acme-space-1); font-weight: 400; color: var(--acme-color-text-muted); }
+.bt-chart__quote { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--acme-space-3); }
 .bt-chart__price {
-  font-size: var(--acme-text-4xl);
+  font-size: var(--acme-text-5xl);
   font-weight: 600;
   letter-spacing: var(--acme-tracking-tight);
   line-height: 1.1;
 }
-.bt-chart__chg { color: var(--acme-color-text-muted); }
+.bt-chart__chg { font-size: var(--acme-text-md); font-weight: 500; color: var(--acme-color-text-muted); }
 .bt-figure { margin: 0; display: flex; flex-direction: column; gap: var(--acme-space-2); }
 .bt-figure svg { width: 100%; height: auto; display: block; }
 .bt-figure figcaption {
@@ -220,42 +238,27 @@ body { font-size: var(--acme-text-sm); }
   border-top: 1px solid var(--acme-color-border);
   padding-top: var(--acme-space-4);
 }
-.bt-stats dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+.bt-stats dt { font-size: var(--acme-text-xs); font-weight: 500; color: var(--acme-color-text-muted); }
+.bt-stats dd { margin: 2px 0 0; font-weight: 500; font-variant-numeric: tabular-nums; }
 
 /* ---------- Ticket ---------- */
 .bt-ticket {
-  flex: 1 1 300px;
+  flex: 1 1 320px;
   min-width: 0;
-  padding: var(--acme-space-5);
-  gap: var(--acme-space-5);
+  overflow: hidden;
+}
+.bt-ticket__body { padding: var(--acme-space-5); display: flex; flex-direction: column; gap: var(--acme-space-4); }
+.bt-ticket__foot {
+  padding: var(--acme-space-4) var(--acme-space-5);
+  background: var(--acme-color-surface);
+  border-top: 1px solid var(--acme-color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--acme-space-2);
 }
 .bt-ticket__sub { margin: var(--acme-space-1) 0 0; font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); }
-.bt-segment {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--acme-space-1);
-  padding: var(--acme-space-1);
-  background: var(--acme-color-surface);
-  border-radius: var(--acme-radius-md);
-}
-.bt-segment button {
-  min-height: 44px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--acme-color-text-muted);
-  font: 500 var(--acme-text-sm) var(--acme-font-sans);
-  cursor: pointer;
-  transition: background-color var(--acme-duration-base) var(--acme-ease-out), color var(--acme-duration-base) var(--acme-ease-out);
-}
-.bt-segment button:hover { color: var(--acme-color-text); }
-.bt-segment button[aria-pressed="true"] {
-  background: var(--acme-color-surface-raised);
-  border-color: var(--acme-color-border);
-  color: var(--acme-color-selected);
-  font-weight: 600;
-  box-shadow: var(--acme-shadow-sm);
-}
+.bt-side .acme-tab { flex: 1; min-height: 44px; }
+.bt-side .acme-tab[aria-pressed="true"] { border-block-end-color: var(--acme-color-text); color: var(--acme-color-text); }
 .bt-ticket .acme-input { width: 100%; font-variant-numeric: tabular-nums; }
 .bt-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--acme-space-2); }
 .bt-estimate {
@@ -263,9 +266,6 @@ body { font-size: var(--acme-text-sm); }
   display: flex;
   flex-direction: column;
   gap: var(--acme-space-2);
-  padding: var(--acme-space-4);
-  background: var(--acme-color-surface);
-  border-radius: var(--acme-radius-md);
   font-variant-numeric: tabular-nums;
 }
 .bt-estimate > div { display: flex; justify-content: space-between; gap: var(--acme-space-3); }
@@ -284,7 +284,28 @@ body { font-size: var(--acme-text-sm); }
 }
 .bt-held svg { flex-shrink: 0; margin-top: 1px; }
 .bt-place { width: 100%; }
-.bt-fineprint { margin: 0; font-size: var(--acme-text-xs); color: var(--acme-color-text-subtle); }
+.bt-fineprint { margin: 0; font-size: var(--acme-text-xs); color: var(--acme-color-text-muted); text-align: center; }
+
+/* ---------- Your position ---------- */
+.bt-holding {
+  flex: 1 1 280px;
+  min-width: 0;
+  padding: var(--acme-space-5);
+  gap: var(--acme-space-4);
+}
+.bt-holding__grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--acme-space-4);
+}
+.bt-holding__grid dt { font-size: var(--acme-text-xs); font-weight: 500; color: var(--acme-color-text-muted); }
+.bt-holding__grid dd { margin: var(--acme-space-1) 0 0; }
+.bt-holding__grid dd.bt-holding__big { font-size: var(--acme-text-xl); font-weight: 600; letter-spacing: var(--acme-tracking-snug); }
+.bt-holding__grid dd:not(.bt-holding__big) { font-weight: 500; }
+.bt-holding__none { margin: 0; color: var(--acme-color-text-muted); }
+.bt-holding__link { font-weight: 500; text-decoration: none; align-self: flex-start; }
+.bt-holding__link:hover { text-decoration: underline; }
 
 /* ---------- Positions + orders tables ---------- */
 .bt-table-card { overflow: hidden; }
@@ -297,7 +318,7 @@ body { font-size: var(--acme-text-sm); }
 .bt-table-scroll :is(th, td):first-child { padding-inline-start: var(--acme-space-5); }
 .bt-table-scroll :is(th, td):last-child { padding-inline-end: var(--acme-space-5); }
 .bt-table-scroll tbody tr:last-child td { border-block-end: 0; }
-.bt-sub { color: var(--acme-color-text-subtle); }
+.bt-table-scroll .bt-row-btn { display: flex; flex-direction: column; gap: 2px; }
 .bt-pl { font-weight: 500; }
 .bt-actions { text-align: end; }
 .bt-time { color: var(--acme-color-text-muted); font-variant-numeric: tabular-nums; }
@@ -343,15 +364,17 @@ body { font-size: var(--acme-text-sm); }
   .bt-main { padding: var(--acme-space-4); gap: var(--acme-space-4); }
   .bt-trade-row { gap: var(--acme-space-4); }
   /* Phone order follows the canvas: chart, then ticket, then the list. */
-  .bt-chart { order: 1; padding: var(--acme-space-4); }
-  .bt-ticket { order: 2; padding: var(--acme-space-4); }
-  .bt-markets { order: 3; }
-  .bt-chart__name { font-size: var(--acme-text-xl); }
+  .bt-trade-main { order: 1; gap: var(--acme-space-4); }
+  .bt-trade-sub { gap: var(--acme-space-4); }
+  .bt-markets { order: 2; }
+  .bt-chart { padding: var(--acme-space-4); }
+  .bt-ticket__body { padding: var(--acme-space-4); }
+  .bt-ticket__foot { padding: var(--acme-space-3) var(--acme-space-4); }
+  .bt-holding { padding: var(--acme-space-4); }
   .bt-chart__price { font-size: var(--acme-text-3xl); }
-  .bt-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .bt-stat--lead,
+  .bt-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--acme-space-3); }
+  .bt-stat:first-child,
   .bt-stat:last-child:nth-child(even) { grid-column: 1 / -1; }
-  .bt-chart__quote { text-align: start; }
   .bt-market-scroll { max-height: 60vh; }
-  .bt-segment button, .bt-place { min-height: 48px; }
+  .bt-place { min-height: 48px; }
 }
