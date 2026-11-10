@@ -93,14 +93,19 @@
     "many": "{count} يومًا",
     "other": "{count} يوم"
   },
-  "stat.youHold": "حيازتك",
-  "stat.none": "لا شيء",
   "stat.open": "الافتتاح",
   "stat.dayHigh": "أعلى سعر اليوم",
   "stat.dayLow": "أدنى سعر اليوم",
   "stat.volume": "الحجم",
   "stat.holdFuture": "{direction} {count}",
-  "stat.holdSpot": "{count} @ {price}",
+
+  "holding.title": "مركزك في {symbol}",
+  "holding.none": "لا تملك أي {symbol} بعد. قدّم أمرًا لفتح مركز.",
+  "holding.value": "القيمة السوقية",
+  "holding.avgCost": "متوسط التكلفة",
+  "holding.unrealized": "الربح/الخسارة غير المحققة",
+  "holding.margin": "الهامش",
+  "holding.seeAll": "عرض كل المراكز",
 
   "ticket.title": "تقديم أمر",
   "ticket.titleFuture": "فتح مركز",
@@ -148,7 +153,6 @@
   "toast.closed": "تم إغلاق {count} {symbol} · {pl}",
   "toast.networkClose": "خطأ في الشبكة. ما زال المركز مفتوحًا — حاول مرة أخرى.",
 
-  "positions.title": "المراكز المفتوحة",
   "positions.meta": {
     "zero": "لا توجد مراكز · بسعر السوق",
     "one": "مركز واحد · بسعر السوق",
@@ -157,17 +161,19 @@
     "many": "{count} مركزًا · بسعر السوق",
     "other": "{count} مركز · بسعر السوق"
   },
-  "positions.empty": "لا توجد مراكز مفتوحة. نفّذ صفقتك الأولى أعلاه.",
   "positions.colInstrument": "الأداة",
   "positions.colSide": "الجانب",
   "positions.colQty": "الكمية",
   "positions.colEntry": "سعر الدخول",
   "positions.colMark": "سعر السوق",
-  "positions.colValue": "القيمة / الهامش",
-  "positions.colLeverage": "الرافعة المالية",
   "positions.colOpenPL": "الربح/الخسارة المفتوحة",
   "positions.colActions": "الإجراءات",
   "positions.margin": "هامش {amount}",
+  "positions.spotEmpty": "لا توجد حيازات فورية بعد. نفّذ أول صفقة لك في الأعلى.",
+  "positions.futuresTitle": "مراكز العقود الآجلة",
+  "positions.futuresEmpty": "لا توجد مراكز آجلة مفتوحة.",
+  "positions.futuresNote": "تُسوّى العقود الآجلة نقدًا. الرافعة = 1 ÷ نسبة الهامش؛ ولا يُخصم من نقدك إلا الهامش.",
+  "positions.colContract": "العقد",
 
   "orders.title": "سجل الأوامر",
   "orders.meta": {

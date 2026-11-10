@@ -173,11 +173,11 @@ function renderHeader() {
 
   const openPL = portfolio.unrealizedPL + portfolio.derivativesPL;
   const stat = (key, value, cls = "") =>
-    `<div class="bt-stat"><div class="label-caps">${th(key)}</div><div class="bt-stat__value num${cls}">${value}</div></div>`;
+    `<div class="bt-stat"><div class="bt-stat__label">${th(key)}</div><div class="bt-stat__value num${cls}">${value}</div></div>`;
 
   $("trade").innerHTML = `
-    <div class="bt-stat bt-stat--lead">
-      <div class="label-caps">${th("summary.equity")}</div>
+    <div class="bt-stat">
+      <div class="bt-stat__label">${th("summary.equity")}</div>
       <div class="bt-stat__value num">${fmt.money(portfolio.equity)}</div>
       <div class="bt-stat__sub num${plClass(portfolio.totalPL)}">${th("summary.sinceStart", {
         amount: fmt.money(portfolio.totalPL, { signed: true }), pct: fmt.pct(portfolio.totalPLPct) })}</div>
@@ -197,6 +197,7 @@ function renderHeader() {
 // until it fits its tile.
 function fitStatValues(root) {
   root.querySelectorAll(".bt-stat__value").forEach((el) => {
+    el.style.fontSize = "";
     let size = parseFloat(getComputedStyle(el).fontSize);
     while (el.scrollWidth > el.clientWidth + 1 && size > 12) {
       size -= 1;
@@ -265,29 +266,18 @@ function renderChart() {
   const card = $("chart-card");
   if (!s) { card.innerHTML = `<h2 id="chart-h" class="bt-card-title">${th("chart.loading")}</h2>`; return; }
 
-  const held = isFuture(s)
-    ? portfolio?.positions?.find((p) => p.symbol === s.symbol)
-    : portfolio?.holdings?.find((h) => h.symbol === s.symbol);
-  const holdText = !held ? t("stat.none")
-    : isFuture(s) ? t("stat.holdFuture", { direction: sideLabel(held.direction), count: held.contracts })
-    : t("stat.holdSpot", { count: held.shares, price: quote(s, held.avgCost) });
-
   const stats = isFuture(s)
     ? [["stat.notional", fmt.money(s.notional)], ["stat.marginPerContract", fmt.money(s.marginPerContract)],
-       ["stat.leverage", lev(s.leverage)], ["stat.expiresIn", esc(t("stat.days", { count: s.daysToExpiry }))],
-       ["stat.youHold", esc(holdText)]]
+       ["stat.leverage", lev(s.leverage)], ["stat.expiresIn", esc(t("stat.days", { count: s.daysToExpiry }))]]
     : [["stat.open", quote(s, s.open)], ["stat.dayHigh", quote(s, s.dayHigh)], ["stat.dayLow", quote(s, s.dayLow)],
-       ["stat.volume", fmt.compact(s.volume)], ["stat.youHold", esc(holdText)]];
+       ["stat.volume", fmt.compact(s.volume)]];
 
   const ticks = s.spark.length;
   card.innerHTML = `
     <div class="bt-chart__head">
-      <div>
-        <div class="bt-chart__sym">
-          <span class="mono">${esc(s.symbol)}</span>
-          <span class="acme-badge">${th("class." + s.assetClass)} · ${esc(sectorLabel(s))}</span>
-        </div>
-        <h2 id="chart-h" class="bt-chart__name">${esc(s.name)}</h2>
+      <div class="bt-chart__sym">
+        <h2 id="chart-h" class="bt-chart__title"><span class="mono">${esc(s.symbol)}</span> <span class="bt-chart__name">${esc(s.name)}</span></h2>
+        <span class="acme-badge">${th("class." + s.assetClass)} · ${esc(sectorLabel(s))}</span>
       </div>
       <div class="bt-chart__quote">
         <div class="bt-chart__price num">${quote(s, s.price, { withSymbol: true })}</div>
@@ -300,7 +290,7 @@ function renderChart() {
       <figcaption><span>${esc(fmt.secondsAgo(Math.round((ticks * POLL_MS) / 1000)))}</span><span>${th("chart.live", { count: ticks })}</span><span>${th("chart.now")}</span></figcaption>
     </figure>
     <dl class="bt-stats">
-      ${stats.map(([k, v]) => `<div><dt class="label-caps">${th(k)}</dt><dd>${v}</dd></div>`).join("")}
+      ${stats.map(([k, v]) => `<div><dt>${th(k)}</dt><dd>${v}</dd></div>`).join("")}
     </dl>`;
 }
 
@@ -333,15 +323,16 @@ function buildTicket() {
     ` ${th("ticket.settlesUsd", { currency: i18n.currency })}`;
 
   card.innerHTML = `
+    <div class="bt-ticket__body">
     <div>
       <h2 id="ticket-h" class="bt-card-title">${th(fut ? "ticket.titleFuture" : "ticket.title")}</h2>
       <p class="bt-ticket__sub">${fut
         ? th("ticket.subFuture", { rate: fmt.pct(s.marginRate * 100, { digits: 0, signed: false }) })
         : th("ticket.subSpot")}</p>
     </div>
-    <div class="bt-segment" role="group" aria-label="${th(fut ? "ticket.direction" : "ticket.side")}">
-      <button type="button" data-side="${a}" aria-pressed="${side === a}">${esc(sideLabel(a))}</button>
-      <button type="button" data-side="${b}" aria-pressed="${side === b}">${esc(sideLabel(b))}</button>
+    <div class="acme-tabs bt-side" role="group" aria-label="${th(fut ? "ticket.direction" : "ticket.side")}">
+      <button type="button" class="acme-tab" data-side="${a}" aria-pressed="${side === a}">${esc(sideLabel(a))}</button>
+      <button type="button" class="acme-tab" data-side="${b}" aria-pressed="${side === b}">${esc(sideLabel(b))}</button>
     </div>
     <div class="acme-field">
       <label class="acme-label" for="qty">${th(fut ? "ticket.contracts" : "ticket.quantity")}</label>
@@ -354,8 +345,11 @@ function buildTicket() {
     </div>
     <dl class="bt-estimate" id="ticket-est"></dl>
     <div class="bt-held" id="ticket-held" hidden></div>
-    <button type="button" id="place-order" class="acme-btn acme-btn--primary acme-btn--lg bt-place"></button>
-    <p class="bt-fineprint">${th("ticket.fineprint")}${settles}</p>`;
+    </div>
+    <div class="bt-ticket__foot">
+      <button type="button" id="place-order" class="acme-btn acme-btn--primary acme-btn--lg bt-place"></button>
+      <p class="bt-fineprint">${th("ticket.fineprint")}${settles}</p>
+    </div>`;
 
   card.querySelectorAll("[data-side]").forEach((btn) =>
     btn.addEventListener("click", () => { side = btn.dataset.side; renderTicket(); }));
@@ -425,11 +419,49 @@ function updateTicket() {
   btn.disabled = qty <= 0;
 }
 
+// --- your position in the selected instrument ------------------------------
+function renderHolding() {
+  const s = stocks[selected];
+  const card = $("holding-card");
+  if (!s) { card.innerHTML = ""; card.hidden = true; return; }
+  card.hidden = false;
+  const fut = isFuture(s);
+  const held = fut
+    ? portfolio?.positions?.find((p) => p.symbol === s.symbol)
+    : portfolio?.holdings?.find((h) => h.symbol === s.symbol);
+  const item = (key, v, cls = "") => `<div><dt>${th(key)}</dt><dd class="num${cls}">${v}</dd></div>`;
+  const pl = (n, pct) => `${fmt.money(n, { signed: true })} (${fmt.pct(pct)})`;
+
+  let body;
+  if (!held) {
+    body = `<p class="bt-holding__none">${th("holding.none", { symbol: s.symbol })}</p>`;
+  } else if (fut) {
+    body = `<dl class="bt-holding__grid">
+      ${item("positions.colSide", esc(t("stat.holdFuture", { direction: sideLabel(held.direction), count: held.contracts })), " bt-holding__big")}
+      ${item("holding.margin", fmt.money(held.margin), " bt-holding__big")}
+      ${item("positions.colEntry", quote(s, held.entry))}
+      ${item("positions.colOpenPL", pl(held.unrealizedPL, held.unrealizedPLPct), plClass(held.unrealizedPL))}
+    </dl>`;
+  } else {
+    body = `<dl class="bt-holding__grid">
+      ${item("ticket.quantity", fmt.int(held.shares), " bt-holding__big")}
+      ${item("holding.value", fmt.money(held.marketValue), " bt-holding__big")}
+      ${item("holding.avgCost", quote(s, held.avgCost, { withSymbol: true }))}
+      ${item("holding.unrealized", pl(held.unrealizedPL, held.unrealizedPLPct), plClass(held.unrealizedPL))}
+    </dl>`;
+  }
+  card.innerHTML = `
+    <h2 id="holding-h" class="bt-card-title">${th("holding.title", { symbol: s.symbol })}</h2>
+    ${body}
+    <a class="bt-holding__link" href="${fut ? "#futures" : "#portfolio"}">${th("holding.seeAll")}</a>`;
+}
+
 function renderTicket() {
   const s = stocks[selected];
   if (s && !ticketSides(s).includes(side)) side = ticketSides(s)[0];
   if (!s || ticketKey !== ticketId()) buildTicket();
   updateTicket();
+  renderHolding();
 }
 
 function selectStock(symbol) {
@@ -497,59 +529,70 @@ async function closePosition(symbol, kind) {
   }
 }
 
-// --- positions table -------------------------------------------------
-function renderPortfolio() {
-  if (!portfolio) return;
-  const body = $("portfolio-body");
-  const holdings = portfolio.holdings || [];
-  const positions = portfolio.positions || [];
-  const n = holdings.length + positions.length;
-  $("pf-meta").textContent = n ? t("positions.meta", { count: n }) : "";
-
-  if (!n) {
-    body.innerHTML = `<p class="bt-empty-card">${th("positions.empty")}</p>`;
-    return;
-  }
-
-  const row = (r) => `<tr>
-    <td><button class="bt-row-btn" data-symbol="${esc(r.symbol)}"><span class="mono">${esc(r.symbol)}</span> <span class="bt-sub">${esc(r.name)}</span></button></td>
-    <td><span class="acme-badge">${esc(r.side)}</span></td>
-    <td class="acme-table__num">${fmt.int(r.qty)}</td>
-    <td class="acme-table__num">${quote(r.inst, r.entry)}</td>
-    <td class="acme-table__num">${quote(r.inst, r.mark)}</td>
-    <td class="acme-table__num">${r.value}</td>
-    <td class="acme-table__num">${r.lev}</td>
-    <td class="acme-table__num bt-pl${plClass(r.pl)}">${fmt.money(r.pl, { signed: true })}</td>
-    <td class="bt-actions"><button type="button" class="acme-btn acme-btn--ghost acme-btn--sm" data-close="${esc(r.symbol)}" data-kind="${esc(r.kind)}">${th("side.close")}</button></td>
-  </tr>`;
-
-  const rows = [
-    ...positions.map((p) => ({
-      kind: "future", symbol: p.symbol, name: p.name, side: sideLabel(p.direction), inst: stocks[p.symbol] || { kind: "future" },
-      qty: p.contracts, entry: p.entry, mark: p.mark, value: th("positions.margin", { amount: fmt.money(p.margin) }),
-      lev: p.leverage ? lev(p.leverage) : "—", pl: p.unrealizedPL,
-    })),
-    ...holdings.map((h) => ({
-      kind: "spot", symbol: h.symbol, name: h.name, side: sideLabel("long"), inst: stocks[h.symbol] || { kind: "spot" },
-      qty: h.shares, entry: h.avgCost, mark: h.price, value: fmt.money(h.marketValue), lev: "—", pl: h.unrealizedPL,
-    })),
-  ];
-
-  body.innerHTML = `<div class="bt-table-scroll"><table class="acme-table">
-    <thead><tr>
-      <th scope="col">${th("positions.colInstrument")}</th><th scope="col">${th("positions.colSide")}</th>
-      <th scope="col" class="acme-table__num">${th("positions.colQty")}</th><th scope="col" class="acme-table__num">${th("positions.colEntry")}</th>
-      <th scope="col" class="acme-table__num">${th("positions.colMark")}</th><th scope="col" class="acme-table__num">${th("positions.colValue")}</th>
-      <th scope="col" class="acme-table__num">${th("positions.colLeverage")}</th><th scope="col" class="acme-table__num">${th("positions.colOpenPL")}</th>
-      <th scope="col"><span class="sr-only">${th("positions.colActions")}</span></th>
-    </tr></thead>
-    <tbody>${rows.map(row).join("")}</tbody>
+// --- spot holdings + futures positions tables ------------------------------
+function tableHTML(head, rows) {
+  return `<div class="bt-table-scroll"><table class="acme-table">
+    <thead><tr>${head.map(([key, num]) => key
+      ? `<th scope="col"${num ? ' class="acme-table__num"' : ""}>${th(key)}</th>`
+      : `<th scope="col"><span class="sr-only">${th("positions.colActions")}</span></th>`).join("")}</tr></thead>
+    <tbody>${rows.join("")}</tbody>
   </table></div>`;
+}
 
+const instrumentCell = (symbol, name) =>
+  `<td><button class="bt-row-btn" data-symbol="${esc(symbol)}"><span class="mono">${esc(symbol)}</span><span class="bt-row-name">${esc(name)}</span></button></td>`;
+const closeCell = (symbol, kind) =>
+  `<td class="bt-actions"><button type="button" class="acme-btn acme-btn--${kind === "future" ? "secondary" : "ghost"} acme-btn--sm" data-close="${esc(symbol)}" data-kind="${kind}">${th("side.close")}</button></td>`;
+
+function wireTable(body) {
   body.querySelectorAll(".bt-row-btn").forEach((b) =>
     b.addEventListener("click", () => selectStock(b.dataset.symbol)));
   body.querySelectorAll("[data-close]").forEach((b) =>
     b.addEventListener("click", () => closePosition(b.dataset.close, b.dataset.kind)));
+}
+
+function renderPortfolio() {
+  if (!portfolio) return;
+  const holdings = portfolio.holdings || [];
+  const positions = portfolio.positions || [];
+
+  const spot = $("spot-body");
+  $("spot-meta").textContent = holdings.length ? t("positions.meta", { count: holdings.length }) : "";
+  spot.innerHTML = !holdings.length ? `<p class="bt-empty-card">${th("positions.spotEmpty")}</p>`
+    : tableHTML(
+      [["positions.colInstrument"], ["positions.colQty", 1], ["holding.avgCost", 1], ["ticket.price", 1],
+       ["holding.value", 1], ["holding.unrealized", 1], [null]],
+      holdings.map((h) => {
+        const inst = stocks[h.symbol] || { kind: "spot" };
+        return `<tr>${instrumentCell(h.symbol, h.name)}
+          <td class="acme-table__num">${fmt.int(h.shares)}</td>
+          <td class="acme-table__num">${quote(inst, h.avgCost)}</td>
+          <td class="acme-table__num">${quote(inst, h.price)}</td>
+          <td class="acme-table__num bt-pl">${fmt.money(h.marketValue)}</td>
+          <td class="acme-table__num bt-pl${plClass(h.unrealizedPL)}">${fmt.money(h.unrealizedPL, { signed: true })}</td>
+          ${closeCell(h.symbol, "spot")}</tr>`;
+      }));
+  wireTable(spot);
+
+  const fut = $("futures-body");
+  $("fut-meta").textContent = positions.length ? t("positions.meta", { count: positions.length }) : "";
+  fut.innerHTML = !positions.length ? `<p class="bt-empty-card">${th("positions.futuresEmpty")}</p>`
+    : tableHTML(
+      [["positions.colContract"], ["positions.colSide"], ["ticket.contracts", 1], ["positions.colEntry", 1],
+       ["positions.colMark", 1], ["stat.notional", 1], ["holding.margin", 1], ["positions.colOpenPL", 1], [null]],
+      positions.map((p) => {
+        const inst = stocks[p.symbol] || { kind: "future" };
+        return `<tr>${instrumentCell(p.symbol, p.leverage ? `${p.name} · ${lev(p.leverage)}` : p.name)}
+          <td><span class="acme-badge">${esc(sideLabel(p.direction))}</span></td>
+          <td class="acme-table__num">${fmt.int(p.contracts)}</td>
+          <td class="acme-table__num">${quote(inst, p.entry)}</td>
+          <td class="acme-table__num">${quote(inst, p.mark)}</td>
+          <td class="acme-table__num">${fmt.money(p.notional)}</td>
+          <td class="acme-table__num">${fmt.money(p.margin)}</td>
+          <td class="acme-table__num bt-pl${plClass(p.unrealizedPL)}">${fmt.money(p.unrealizedPL, { signed: true })}</td>
+          ${closeCell(p.symbol, "future")}</tr>`;
+      }));
+  wireTable(fut);
 }
 
 // --- order history ------------------------------------------------------
@@ -650,6 +693,7 @@ async function init() {
     rerenderAll();
   });
   window.addEventListener("scroll", syncNav, { passive: true });
+  window.addEventListener("resize", () => fitStatValues($("trade")), { passive: true });
   refresh();
   setInterval(refresh, POLL_MS);
 }
