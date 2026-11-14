@@ -15,6 +15,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Pick up Alpine security fixes that landed after the pinned base image was
+# built (e.g. zlib CVE-2026-4738, fixed in 1.4-r0).
+RUN apk upgrade --no-cache
+
 # Create non-root user
 RUN addgroup -S app && adduser -S app -G app
 
