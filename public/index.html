@@ -6,30 +6,31 @@
   <title>BunTrade — Paper Trading</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="acme.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="modernist.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="acme-topbar bt-topbar">
-    <a class="acme-wordmark bt-wordmark" href="#trade"><span class="acme-wordmark__mark">B</span>BunTrade</a>
-    <nav class="acme-topbar__nav bt-nav" aria-label="Main" data-i18n-aria-label="nav.label">
-      <a class="acme-topbar__link" href="#trade" aria-current="page" data-i18n="nav.trade">Trade</a>
-      <a class="acme-topbar__link" href="#portfolio" data-i18n="nav.portfolio">Portfolio</a>
-      <a class="acme-topbar__link" href="#orders" data-i18n="nav.orders">Orders</a>
+  <header class="mn-topbar bt-topbar">
+    <div class="bt-topbar__inner">
+    <a class="mn-wordmark bt-wordmark" href="#trade">BunTrade</a>
+    <nav class="mn-topbar__nav bt-nav" aria-label="Main" data-i18n-aria-label="nav.label">
+      <a class="mn-topbar__link" href="#trade" aria-current="page" data-i18n="nav.trade">Trade</a>
+      <a class="mn-topbar__link" href="#portfolio" data-i18n="nav.portfolio">Portfolio</a>
+      <a class="mn-topbar__link" href="#orders" data-i18n="nav.orders">Orders</a>
     </nav>
     <div class="bt-meta">
-      <span class="acme-badge acme-badge--info">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="mn-badge mn-badge--info">
         <span data-i18n="header.paper">Paper account</span>
       </span>
       <span class="bt-updated" id="updated-label" data-i18n="header.connecting">Connecting…</span>
       <div class="bt-prefs">
         <label class="sr-only" for="lang-select" data-i18n="prefs.language">Language</label>
-        <select id="lang-select" class="acme-input bt-select" data-i18n-aria-label="prefs.language" aria-label="Language"></select>
+        <select id="lang-select" class="mn-input bt-select" data-i18n-aria-label="prefs.language" aria-label="Language"></select>
         <label class="sr-only" for="currency-select" data-i18n="prefs.currency">Display currency</label>
-        <select id="currency-select" class="acme-input bt-select" data-i18n-aria-label="prefs.currency" aria-label="Display currency"></select>
+        <select id="currency-select" class="mn-input bt-select" data-i18n-aria-label="prefs.currency" aria-label="Display currency"></select>
       </div>
+    </div>
     </div>
   </header>
 
@@ -37,25 +38,25 @@
     <section id="trade" class="bt-summary" aria-label="Account summary" data-i18n-aria-label="summary.label"></section>
 
     <div class="bt-trade-row">
-      <section class="acme-card bt-card bt-markets" aria-labelledby="markets-h">
+      <section class="mn-card bt-card bt-markets" aria-labelledby="markets-h">
         <div class="bt-markets__head">
           <div class="bt-card-head">
             <h2 id="markets-h" class="bt-card-title" data-i18n="markets.title">Markets</h2>
             <span class="bt-card-meta" id="market-count"></span>
           </div>
-          <div class="acme-field">
-            <label class="acme-label sr-only" for="search" data-i18n="markets.search">Search markets</label>
-            <input id="search" class="acme-input" type="search" placeholder="Search symbol or name" data-i18n-placeholder="markets.searchPlaceholder" autocomplete="off" />
+          <div class="mn-field">
+            <label class="mn-label sr-only" for="search" data-i18n="markets.search">Search markets</label>
+            <input id="search" class="mn-input" type="search" placeholder="Search symbol or name" data-i18n-placeholder="markets.searchPlaceholder" autocomplete="off" />
           </div>
-          <div class="acme-tabs bt-asset-tabs" id="asset-tabs" role="tablist" aria-label="Asset class" data-i18n-aria-label="markets.assetClass"></div>
+          <div class="mn-tabs bt-asset-tabs" id="asset-tabs" role="tablist" aria-label="Asset class" data-i18n-aria-label="markets.assetClass"></div>
         </div>
         <div class="bt-market-scroll">
-          <table class="acme-table bt-market-table">
+          <table class="mn-table bt-market-table">
             <thead>
               <tr>
                 <th scope="col" data-i18n="markets.colSymbol">Symbol</th>
                 <th scope="col" class="bt-col-spark"><span class="sr-only" data-i18n="markets.colTrend">Trend</span></th>
-                <th scope="col" class="acme-table__num bt-col-price" id="col-price">Price</th>
+                <th scope="col" class="mn-table__num bt-col-price" id="col-price">Price</th>
               </tr>
             </thead>
             <tbody id="market-list"></tbody>
@@ -64,16 +65,16 @@
       </section>
 
       <div class="bt-trade-main">
-        <section class="acme-card bt-card bt-chart" id="chart-card" aria-live="off" aria-labelledby="chart-h"></section>
+        <section class="mn-card bt-card bt-chart" id="chart-card" aria-live="off" aria-labelledby="chart-h"></section>
 
         <div class="bt-trade-sub">
-          <section class="acme-card bt-card bt-ticket" id="trade-card" aria-labelledby="ticket-h"></section>
-          <section class="acme-card bt-card bt-holding" id="holding-card" aria-labelledby="holding-h"></section>
+          <section class="mn-card bt-card bt-ticket" id="trade-card" aria-labelledby="ticket-h"></section>
+          <section class="mn-card bt-card bt-holding" id="holding-card" aria-labelledby="holding-h"></section>
         </div>
       </div>
     </div>
 
-    <section id="portfolio" class="acme-card bt-card bt-table-card" aria-labelledby="spot-h">
+    <section id="portfolio" class="mn-card bt-card bt-table-card" aria-labelledby="spot-h">
       <div class="bt-card-head bt-table-card__head">
         <h2 id="spot-h" class="bt-card-title" data-i18n="summary.spot">Spot holdings</h2>
         <span class="bt-card-meta" id="spot-meta"></span>
@@ -81,7 +82,7 @@
       <div id="spot-body"></div>
     </section>
 
-    <section id="futures" class="acme-card bt-card bt-table-card" aria-labelledby="fut-h">
+    <section id="futures" class="mn-card bt-card bt-table-card" aria-labelledby="fut-h">
       <div class="bt-card-head bt-table-card__head">
         <h2 id="fut-h" class="bt-card-title" data-i18n="positions.futuresTitle">Futures positions</h2>
         <span class="bt-card-meta" id="fut-meta"></span>
@@ -90,7 +91,7 @@
       <p class="bt-card-note" data-i18n="positions.futuresNote">Futures are cash-settled. Leverage is 1 ÷ margin rate; only margin leaves your cash.</p>
     </section>
 
-    <section id="orders" class="acme-card bt-card bt-table-card" aria-labelledby="ord-h">
+    <section id="orders" class="mn-card bt-card bt-table-card" aria-labelledby="ord-h">
       <div class="bt-card-head bt-table-card__head">
         <h2 id="ord-h" class="bt-card-title" data-i18n="orders.title">Order history</h2>
         <span class="bt-card-meta" id="orders-meta"></span>

@@ -1,0 +1,235 @@
+/* Modernist design system — tokens and base components.
+   Swiss style: a flush-left 12-column grid, one grotesque face (Archivo),
+   black rules instead of shadows, square corners. Colour has two jobs only:
+   blue means act or "you are here"; red means danger and always comes with a
+   word. Everything else is black on white. Light theme only. */
+
+:root {
+  /* Colour */
+  --mn-paper: #ffffff;
+  --mn-paper-2: #f1f1ef;
+  --mn-rule: #cfcfcb;
+  --mn-ink: #111111;
+  --mn-ink-2: #454542;
+  --mn-ink-3: #6a6a66;
+  --mn-rule-strong: var(--mn-ink);
+  --mn-blue: #1e40d8;
+  --mn-blue-hover: #1631a8;
+  --mn-blue-soft: #e6ebfc;
+  --mn-on-blue: var(--mn-paper);
+  --mn-red: #b3170d;
+  --mn-data-line: var(--mn-ink);
+  --mn-data-highlight: var(--mn-blue);
+
+  /* Type */
+  --font-sans: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mn-font-sans: var(--font-sans);
+  --mn-font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* Space: 8px module, 4px only inside a control */
+  --mn-space-1: 4px;
+  --mn-space-2: 8px;
+  --mn-space-3: 16px;
+  --mn-space-4: 24px;
+  --mn-space-5: 32px;
+  --mn-space-6: 48px;
+  --mn-space-7: 64px;
+  --mn-space-8: 96px;
+
+  /* Strokes */
+  --mn-stroke-hair: 1px;
+  --mn-stroke-rule: 2px;
+  --mn-stroke-alert: 4px;
+  --mn-stroke-bar: 8px;
+
+  /* Layout */
+  --mn-grid-max: 1280px;
+  --mn-grid-gutter: 24px;
+
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--mn-paper);
+  color: var(--mn-ink);
+  font: 400 16px / 1.5 var(--mn-font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--mn-blue); text-underline-offset: 3px; }
+a:hover { color: var(--mn-blue-hover); }
+
+:focus-visible {
+  outline: 2px solid var(--mn-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+h1, h2, h3 { margin: 0; }
+
+/* ---------- Label style: uppercase 12px, written in sentence case ---------- */
+.mn-label {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mn-ink-2);
+}
+
+/* ---------- Wordmark: no logo, Archivo 800 ---------- */
+.mn-wordmark {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--mn-ink);
+  text-decoration: none;
+}
+.mn-wordmark:hover { color: var(--mn-ink); }
+.mn-wordmark__mark { display: none; }
+
+/* ---------- Top bar ---------- */
+.mn-topbar {
+  border-top: var(--mn-stroke-bar) solid var(--mn-ink);
+}
+.mn-topbar__nav { display: flex; gap: var(--mn-space-4); }
+.mn-topbar__link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mn-ink);
+  text-decoration: none;
+}
+.mn-topbar__link:hover { color: var(--mn-blue); }
+.mn-topbar__link[aria-current="page"] {
+  color: var(--mn-blue);
+  box-shadow: inset 0 -2px 0 var(--mn-blue);
+}
+
+/* ---------- Buttons: 44px, square, 2px ink border ---------- */
+.mn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mn-space-2);
+  min-height: 44px;
+  padding: 0 var(--mn-space-3);
+  border: var(--mn-stroke-rule) solid var(--mn-ink);
+  border-radius: 0;
+  background: var(--mn-paper);
+  color: var(--mn-ink);
+  font: 600 16px / 1 var(--mn-font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mn-btn:hover { background: var(--mn-ink); color: var(--mn-paper); }
+.mn-btn--primary { background: var(--mn-blue); border-color: var(--mn-blue); color: var(--mn-on-blue); }
+.mn-btn--primary:hover { background: var(--mn-blue-hover); border-color: var(--mn-blue-hover); color: var(--mn-on-blue); }
+.mn-btn--secondary { /* the default bordered button */ }
+.mn-btn--ghost { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
+.mn-btn--ghost:hover { border-color: var(--mn-ink); text-decoration: none; }
+.mn-btn--sm { font-size: 14px; }
+.mn-btn--lg { min-height: 52px; font-size: 16px; font-weight: 700; }
+.mn-btn:disabled,
+.mn-btn:disabled:hover {
+  background: var(--mn-paper-2);
+  border-color: var(--mn-rule);
+  color: var(--mn-ink-3);
+  cursor: not-allowed;
+}
+
+/* ---------- Fields: label above, 44px control with a 2px ink border ---------- */
+.mn-field { display: flex; flex-direction: column; gap: var(--mn-space-1); }
+.mn-input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: var(--mn-stroke-rule) solid var(--mn-ink);
+  border-radius: 0;
+  background: var(--mn-paper);
+  color: var(--mn-ink);
+  font: 400 16px / 1.2 var(--mn-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.mn-input::placeholder { color: var(--mn-ink-3); }
+.mn-input[aria-invalid="true"] { border-color: var(--mn-red); }
+select.mn-input { font-weight: 600; font-size: 14px; cursor: pointer; }
+.mn-help { margin: 0; font-size: 14px; line-height: 1.45; color: var(--mn-ink-3); }
+
+/* ---------- Badges: a ruled tag, no fill ---------- */
+.mn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mn-space-1);
+  padding: 3px 6px;
+  border: var(--mn-stroke-hair) solid var(--mn-ink);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mn-ink);
+  white-space: nowrap;
+}
+.mn-badge--info { border-width: var(--mn-stroke-rule); padding: 6px 8px; }
+.mn-badge--info svg { display: none; }
+.mn-badge--success { border-color: transparent; padding-inline: 0; }
+
+/* ---------- Sections: rules, not boxes ---------- */
+.mn-card {
+  border-top: var(--mn-stroke-rule) solid var(--mn-rule-strong);
+  padding-top: var(--mn-space-3);
+  background: none;
+}
+
+/* ---------- Tabs: text buttons, current one underlined in blue ---------- */
+.mn-tabs {
+  display: flex;
+  gap: var(--mn-space-3);
+  border-bottom: var(--mn-stroke-hair) solid var(--mn-rule);
+}
+.mn-tab {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mn-ink-2);
+  font: 600 14px / 1.2 var(--mn-font-sans);
+  cursor: pointer;
+}
+.mn-tab:hover { color: var(--mn-blue); }
+.mn-tab[aria-selected="true"] { color: var(--mn-blue); box-shadow: inset 0 -2px 0 var(--mn-blue); }
+
+/* ---------- Tables: hairline rows, ink header rule ---------- */
+.mn-table { width: 100%; border-collapse: collapse; font-size: 16px; }
+.mn-table th {
+  padding: var(--mn-space-2) var(--mn-space-3);
+  border-bottom: var(--mn-stroke-hair) solid var(--mn-ink);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mn-ink-3);
+  text-align: start;
+  vertical-align: bottom;
+}
+.mn-table td {
+  padding: 12px var(--mn-space-3);
+  border-bottom: var(--mn-stroke-hair) solid var(--mn-rule);
+  vertical-align: middle;
+}
+.mn-table :is(th, td):first-child { padding-inline-start: 0; }
+.mn-table :is(th, td):last-child { padding-inline-end: 0; }
+.mn-table tbody tr:hover { background: var(--mn-paper-2); }
+.mn-table .mn-table__num { text-align: end; font-variant-numeric: tabular-nums; }
+.mn-table tbody tr[aria-selected="true"],
+.mn-table tbody tr[aria-selected="true"]:hover { background: var(--mn-blue-soft); }

@@ -23,7 +23,7 @@ const LOCALES = [
   { code: "id", name: "Bahasa Indonesia" },
 ];
 
-// Inter has no glyphs for these scripts; load a matching Noto face so the UI
+// Archivo has no glyphs for these scripts; load a matching Noto face so the UI
 // doesn't depend on whatever the OS happens to fall back to.
 const LOCALE_FONTS = {
   "zh-CN": "Noto+Sans+SC:wght@400;500;600;700",

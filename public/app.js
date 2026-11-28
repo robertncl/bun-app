@@ -3,14 +3,13 @@
 // and order history tables. Polls the simulated market every couple of
 // seconds and re-renders.
 //
-// Color convention (ACME design language v5): every colour has one job.
-// Ink (Graphite 900) fills the one primary action, the place-order button.
-// Blue is interaction: the selected market row, the selected side, the chart's
-// price line and last-price label (--acme-color-data-highlight). Gains read in
-// --acme-color-success-soft-text, losses in --acme-color-danger-soft-text, and
-// every P&L carries its sign, so direction never rests on hue alone. Red is
-// never put on a control unless the action is destructive. Sparklines are
-// neutral Graphite (--acme-color-data).
+// Color convention (Modernist design system, modernist.css): black on white,
+// and blue only for action and orientation — the place-order button, the
+// selected market row, the current tab and nav item, and the chart's latest
+// price (--mn-data-highlight). Chart lines and sparklines are ink
+// (--mn-data-line). Gains and losses are told apart by their +/− sign, never
+// by hue. Red is for errors only (e.g. a negative "cash after"), always with
+// words.
 //
 // The ticket is rendered once per symbol/side and then updated in place, so
 // typing a quantity never loses focus to the 2-second refresh.
@@ -97,7 +96,7 @@ function points(values, w, h, padY) {
 
 const sparkSVG = (values) =>
   `<svg class="bt-spark" width="64" height="24" viewBox="0 0 64 24" aria-hidden="true">
-    <polyline points="${points(values, 64, 24, 3)}" fill="none" stroke="var(--acme-color-data)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <polyline points="${points(values, 64, 24, 3)}" fill="none" stroke="var(--mn-data-line)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
   </svg>`;
 
 function chartSVG(s) {
@@ -110,15 +109,15 @@ function chartSVG(s) {
   const openY = y(s.open);
   const label = t("chart.aria", { symbol: s.symbol, count: values.length, from: quote(s, values[0]), to: quote(s, s.price) });
   return `<svg viewBox="0 0 690 260" role="img" aria-label="${esc(label)}">
-    <line x1="0" y1="40" x2="690" y2="40" stroke="var(--acme-color-border)"/>
-    <line x1="0" y1="110" x2="690" y2="110" stroke="var(--acme-color-border)"/>
-    <line x1="0" y1="180" x2="690" y2="180" stroke="var(--acme-color-border)"/>
-    <line x1="0" y1="250" x2="690" y2="250" stroke="var(--acme-color-border-strong)"/>
-    <line x1="0" y1="${openY.toFixed(1)}" x2="${W}" y2="${openY.toFixed(1)}" stroke="var(--acme-color-data)" stroke-dasharray="4 4"/>
-    <text x="4" y="${(openY - 6).toFixed(1)}" font-size="11" fill="var(--acme-color-text-subtle)" font-family="var(--acme-font-sans)">${th("chart.open", { price: quote(s, s.open) })}</text>
-    <polyline points="${line}" fill="none" stroke="var(--acme-color-data-highlight)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${W}" cy="${lastY.toFixed(1)}" r="4" fill="var(--acme-color-data-highlight)"/>
-    <text x="${W + 8}" y="${(lastY + 4).toFixed(1)}" font-size="12" font-weight="600" fill="var(--acme-color-data-highlight)" font-family="var(--acme-font-sans)">${esc(quote(s, s.price))}</text>
+    <line x1="0" y1="40" x2="690" y2="40" stroke="var(--mn-rule)"/>
+    <line x1="0" y1="110" x2="690" y2="110" stroke="var(--mn-rule)"/>
+    <line x1="0" y1="180" x2="690" y2="180" stroke="var(--mn-rule)"/>
+    <line x1="0" y1="250" x2="690" y2="250" stroke="var(--mn-rule-strong)"/>
+    <line x1="0" y1="${openY.toFixed(1)}" x2="${W}" y2="${openY.toFixed(1)}" stroke="var(--mn-data-line)" stroke-dasharray="4 4"/>
+    <text x="4" y="${(openY - 6).toFixed(1)}" font-size="11" fill="var(--mn-ink-3)" font-family="var(--mn-font-sans)">${th("chart.open", { price: quote(s, s.open) })}</text>
+    <polyline points="${line}" fill="none" stroke="var(--mn-data-line)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${W}" cy="${lastY.toFixed(1)}" r="4" fill="var(--mn-data-highlight)"/>
+    <text x="${W + 8}" y="${(lastY + 4).toFixed(1)}" font-size="12" font-weight="600" fill="var(--mn-data-highlight)" font-family="var(--mn-font-sans)">${esc(quote(s, s.price))}</text>
   </svg>`;
 }
 
@@ -210,9 +209,9 @@ function fitStatValues(root) {
 function renderTabs() {
   const el = $("asset-tabs");
   el.innerHTML = ASSET_TABS.map((id) =>
-    `<button class="acme-tab" role="tab" data-filter="${id}" aria-selected="${id === assetFilter}">${th("tabs." + id)}</button>`
+    `<button class="mn-tab" role="tab" data-filter="${id}" aria-selected="${id === assetFilter}">${th("tabs." + id)}</button>`
   ).join("");
-  el.querySelectorAll(".acme-tab").forEach((b) =>
+  el.querySelectorAll(".mn-tab").forEach((b) =>
     b.addEventListener("click", () => {
       assetFilter = b.dataset.filter;
       renderTabs();
@@ -229,7 +228,7 @@ function visibleStocks() {
 }
 
 function rowHTML(s) {
-  const tag = isFuture(s) ? `<span class="acme-badge bt-tag">${lev(s.leverage)}</span>` : "";
+  const tag = isFuture(s) ? `<span class="mn-badge bt-tag">${lev(s.leverage)}</span>` : "";
   const sel = s.symbol === selected;
   return `<tr data-symbol="${esc(s.symbol)}" aria-selected="${sel}">
     <td>
@@ -239,7 +238,7 @@ function rowHTML(s) {
       </button>
     </td>
     <td class="bt-col-spark">${sparkSVG(s.spark)}</td>
-    <td class="acme-table__num">
+    <td class="mn-table__num">
       <div class="bt-price">${quote(s, s.price)}</div>
       <div class="bt-chg${plClass(s.changePct)}">${fmt.pct(s.changePct)}</div>
     </td>
@@ -277,7 +276,7 @@ function renderChart() {
     <div class="bt-chart__head">
       <div class="bt-chart__sym">
         <h2 id="chart-h" class="bt-chart__title"><span class="mono">${esc(s.symbol)}</span> <span class="bt-chart__name">${esc(s.name)}</span></h2>
-        <span class="acme-badge">${th("class." + s.assetClass)} · ${esc(sectorLabel(s))}</span>
+        <span class="mn-badge">${th("class." + s.assetClass)} · ${esc(sectorLabel(s))}</span>
       </div>
       <div class="bt-chart__quote">
         <div class="bt-chart__price num">${quote(s, s.price, { withSymbol: true })}</div>
@@ -330,24 +329,24 @@ function buildTicket() {
         ? th("ticket.subFuture", { rate: fmt.pct(s.marginRate * 100, { digits: 0, signed: false }) })
         : th("ticket.subSpot")}</p>
     </div>
-    <div class="acme-tabs bt-side" role="group" aria-label="${th(fut ? "ticket.direction" : "ticket.side")}">
-      <button type="button" class="acme-tab" data-side="${a}" aria-pressed="${side === a}">${esc(sideLabel(a))}</button>
-      <button type="button" class="acme-tab" data-side="${b}" aria-pressed="${side === b}">${esc(sideLabel(b))}</button>
+    <div class="mn-tabs bt-side" role="group" aria-label="${th(fut ? "ticket.direction" : "ticket.side")}">
+      <button type="button" class="mn-tab" data-side="${a}" aria-pressed="${side === a}">${esc(sideLabel(a))}</button>
+      <button type="button" class="mn-tab" data-side="${b}" aria-pressed="${side === b}">${esc(sideLabel(b))}</button>
     </div>
-    <div class="acme-field">
-      <label class="acme-label" for="qty">${th(fut ? "ticket.contracts" : "ticket.quantity")}</label>
-      <input id="qty" class="acme-input" type="number" min="1" step="1" value="${qty}" inputmode="numeric" />
-      <span class="acme-help">${esc(sizeHelp)}</span>
+    <div class="mn-field">
+      <label class="mn-label" for="qty">${th(fut ? "ticket.contracts" : "ticket.quantity")}</label>
+      <input id="qty" class="mn-input" type="number" min="1" step="1" value="${qty}" inputmode="numeric" />
+      <span class="mn-help">${esc(sizeHelp)}</span>
     </div>
     <div class="bt-quick">
-      ${quick.map((n) => `<button type="button" class="acme-btn acme-btn--secondary acme-btn--sm" data-qty="${n}">${fmt.int(n)}</button>`).join("")}
-      <button type="button" class="acme-btn acme-btn--secondary acme-btn--sm" data-qty="max">${th("ticket.max")}</button>
+      ${quick.map((n) => `<button type="button" class="mn-btn mn-btn--secondary mn-btn--sm" data-qty="${n}">${fmt.int(n)}</button>`).join("")}
+      <button type="button" class="mn-btn mn-btn--secondary mn-btn--sm" data-qty="max">${th("ticket.max")}</button>
     </div>
     <dl class="bt-estimate" id="ticket-est"></dl>
     <div class="bt-held" id="ticket-held" hidden></div>
     </div>
     <div class="bt-ticket__foot">
-      <button type="button" id="place-order" class="acme-btn acme-btn--primary acme-btn--lg bt-place"></button>
+      <button type="button" id="place-order" class="mn-btn mn-btn--primary mn-btn--lg bt-place"></button>
       <p class="bt-fineprint">${th("ticket.fineprint")}${settles}</p>
     </div>`;
 
@@ -531,9 +530,9 @@ async function closePosition(symbol, kind) {
 
 // --- spot holdings + futures positions tables ------------------------------
 function tableHTML(head, rows) {
-  return `<div class="bt-table-scroll"><table class="acme-table">
+  return `<div class="bt-table-scroll"><table class="mn-table">
     <thead><tr>${head.map(([key, num]) => key
-      ? `<th scope="col"${num ? ' class="acme-table__num"' : ""}>${th(key)}</th>`
+      ? `<th scope="col"${num ? ' class="mn-table__num"' : ""}>${th(key)}</th>`
       : `<th scope="col"><span class="sr-only">${th("positions.colActions")}</span></th>`).join("")}</tr></thead>
     <tbody>${rows.join("")}</tbody>
   </table></div>`;
@@ -542,7 +541,7 @@ function tableHTML(head, rows) {
 const instrumentCell = (symbol, name) =>
   `<td><button class="bt-row-btn" data-symbol="${esc(symbol)}"><span class="mono">${esc(symbol)}</span><span class="bt-row-name">${esc(name)}</span></button></td>`;
 const closeCell = (symbol, kind) =>
-  `<td class="bt-actions"><button type="button" class="acme-btn acme-btn--${kind === "future" ? "secondary" : "ghost"} acme-btn--sm" data-close="${esc(symbol)}" data-kind="${kind}">${th("side.close")}</button></td>`;
+  `<td class="bt-actions"><button type="button" class="mn-btn mn-btn--${kind === "future" ? "secondary" : "ghost"} mn-btn--sm" data-close="${esc(symbol)}" data-kind="${kind}">${th("side.close")}</button></td>`;
 
 function wireTable(body) {
   body.querySelectorAll(".bt-row-btn").forEach((b) =>
@@ -565,11 +564,11 @@ function renderPortfolio() {
       holdings.map((h) => {
         const inst = stocks[h.symbol] || { kind: "spot" };
         return `<tr>${instrumentCell(h.symbol, h.name)}
-          <td class="acme-table__num">${fmt.int(h.shares)}</td>
-          <td class="acme-table__num">${quote(inst, h.avgCost)}</td>
-          <td class="acme-table__num">${quote(inst, h.price)}</td>
-          <td class="acme-table__num bt-pl">${fmt.money(h.marketValue)}</td>
-          <td class="acme-table__num bt-pl${plClass(h.unrealizedPL)}">${fmt.money(h.unrealizedPL, { signed: true })}</td>
+          <td class="mn-table__num">${fmt.int(h.shares)}</td>
+          <td class="mn-table__num">${quote(inst, h.avgCost)}</td>
+          <td class="mn-table__num">${quote(inst, h.price)}</td>
+          <td class="mn-table__num bt-pl">${fmt.money(h.marketValue)}</td>
+          <td class="mn-table__num bt-pl${plClass(h.unrealizedPL)}">${fmt.money(h.unrealizedPL, { signed: true })}</td>
           ${closeCell(h.symbol, "spot")}</tr>`;
       }));
   wireTable(spot);
@@ -583,13 +582,13 @@ function renderPortfolio() {
       positions.map((p) => {
         const inst = stocks[p.symbol] || { kind: "future" };
         return `<tr>${instrumentCell(p.symbol, p.leverage ? `${p.name} · ${lev(p.leverage)}` : p.name)}
-          <td><span class="acme-badge">${esc(sideLabel(p.direction))}</span></td>
-          <td class="acme-table__num">${fmt.int(p.contracts)}</td>
-          <td class="acme-table__num">${quote(inst, p.entry)}</td>
-          <td class="acme-table__num">${quote(inst, p.mark)}</td>
-          <td class="acme-table__num">${fmt.money(p.notional)}</td>
-          <td class="acme-table__num">${fmt.money(p.margin)}</td>
-          <td class="acme-table__num bt-pl${plClass(p.unrealizedPL)}">${fmt.money(p.unrealizedPL, { signed: true })}</td>
+          <td><span class="mn-badge">${esc(sideLabel(p.direction))}</span></td>
+          <td class="mn-table__num">${fmt.int(p.contracts)}</td>
+          <td class="mn-table__num">${quote(inst, p.entry)}</td>
+          <td class="mn-table__num">${quote(inst, p.mark)}</td>
+          <td class="mn-table__num">${fmt.money(p.notional)}</td>
+          <td class="mn-table__num">${fmt.money(p.margin)}</td>
+          <td class="mn-table__num bt-pl${plClass(p.unrealizedPL)}">${fmt.money(p.unrealizedPL, { signed: true })}</td>
           ${closeCell(p.symbol, "future")}</tr>`;
       }));
   wireTable(fut);
@@ -611,10 +610,10 @@ function orderRow(o) {
   return `<tr>
     <td class="bt-time">${fmt.time(o.timestamp)}</td>
     <td><strong>${esc(label)}</strong> <span class="mono">${esc(o.symbol)}</span></td>
-    <td class="acme-table__num">${fmt.int(q)}</td>
-    <td class="acme-table__num">${quote(stocks[o.symbol] || { kind: o.kind }, o.price)}</td>
-    <td class="acme-table__num">${total}</td>
-    <td><span class="acme-badge acme-badge--success">${ICON_CHECK}${th("orders.filled")}</span></td>
+    <td class="mn-table__num">${fmt.int(q)}</td>
+    <td class="mn-table__num">${quote(stocks[o.symbol] || { kind: o.kind }, o.price)}</td>
+    <td class="mn-table__num">${total}</td>
+    <td><span class="mn-badge mn-badge--success">${ICON_CHECK}${th("orders.filled")}</span></td>
   </tr>`;
 }
 
@@ -624,11 +623,11 @@ function renderOrders() {
     ? (orders.length > 25 ? t("orders.metaLatest", { shown: 25, count: orders.length }) : t("orders.meta", { count: orders.length }))
     : "";
   if (!orders.length) { body.innerHTML = `<p class="bt-empty-card">${th("orders.empty")}</p>`; return; }
-  body.innerHTML = `<div class="bt-table-scroll"><table class="acme-table">
+  body.innerHTML = `<div class="bt-table-scroll"><table class="mn-table">
     <thead><tr>
       <th scope="col">${th("orders.colTime")}</th><th scope="col">${th("orders.colOrder")}</th>
-      <th scope="col" class="acme-table__num">${th("orders.colQty")}</th><th scope="col" class="acme-table__num">${th("orders.colFill")}</th>
-      <th scope="col" class="acme-table__num">${th("orders.colTotal")}</th><th scope="col">${th("orders.colStatus")}</th>
+      <th scope="col" class="mn-table__num">${th("orders.colQty")}</th><th scope="col" class="mn-table__num">${th("orders.colFill")}</th>
+      <th scope="col" class="mn-table__num">${th("orders.colTotal")}</th><th scope="col">${th("orders.colStatus")}</th>
     </tr></thead>
     <tbody>${orders.slice(0, 25).map(orderRow).join("")}</tbody>
   </table></div>`;
